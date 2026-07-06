@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#DA291C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Mola Yönetim Merkezi">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>Yönetici Paneli — Mola Yönetim Sistemi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page admin-page">
+
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Tema değiştir" title="Tema değiştir">🌙</button>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <header class="dashboard-header admin-header">
+        <div class="header-content wide">
+            <div class="header-info">
+                <span class="admin-badge">YÖNETİCİ</span>
+                <h1>Mola Yönetim Paneli</h1>
+                <p id="user-greeting" class="user-greeting">Hoş geldiniz</p>
+            </div>
+            <div class="header-actions">
+                <button id="add-employee-btn" class="btn-add" type="button">+ Personel Ekle</button>
+                <button id="logout-btn" class="btn-logout" type="button">Çıkış Yap</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Günün Özeti -->
+    <section class="summary-section wide" id="summary-section">
+        <div class="summary-cards">
+            <div class="summary-card summary-card--active">
+                <div class="summary-card-glow"></div>
+                <span class="summary-card-label">Toplam Aktif Personel</span>
+                <span class="summary-card-value" id="summary-active">—</span>
+            </div>
+            <div class="summary-card summary-card--break">
+                <div class="summary-card-glow"></div>
+                <span class="summary-card-label">Şu An Molada</span>
+                <span class="summary-card-value" id="summary-on-break">—</span>
+            </div>
+            <div class="summary-card summary-card--exhausted">
+                <div class="summary-card-glow"></div>
+                <span class="summary-card-label">Mola Hakkı Biten</span>
+                <span class="summary-card-value" id="summary-exhausted">—</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Panel Sekmeleri -->
+    <nav class="panel-tabs" id="panel-tabs">
+        <button type="button" class="panel-tab active" data-panel="personel">Personel Listesi</button>
+        <button type="button" class="panel-tab" data-panel="users" id="users-tab">Kullanıcı Yönetimi</button>
+    </nav>
+
+    <main class="dashboard-main wide">
+
+        <!-- Personel Listesi Sekmesi -->
+        <section id="panel-personel" class="panel-section">
+            <div class="panel-toolbar">
+                <h2>Personel Listesi</h2>
+                <span id="employee-count" class="employee-count"></span>
+            </div>
+
+            <div class="table-wrapper admin-table" id="employee-cards-wrapper">
+                <table class="employee-table" id="employee-table">
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>Kullanıcı Adı</th>
+                            <th>Durum</th>
+                            <th>Bugünkü Toplam Mola (dk)</th>
+                            <th>Mola Hakkı</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-tbody">
+                        <tr><td colspan="6" class="table-loading">Yükleniyor…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Kullanıcı Yönetimi Sekmesi (Sadece Yönetici) -->
+        <section id="panel-users" class="panel-section" hidden>
+            <div class="panel-toolbar">
+                <h2>Kullanıcı Yönetimi</h2>
+            </div>
+
+            <div class="search-bar">
+                <input type="search" id="user-search-input"
+                       class="search-input" placeholder="Kullanıcı adı ara…" autocomplete="off">
+                <button type="button" id="user-search-btn" class="btn-search">Ara</button>
+            </div>
+
+            <div class="user-results" id="user-results">
+                <p class="search-hint">Terfi ettirmek istediğiniz personelin kullanıcı adını yazın.</p>
+            </div>
+        </section>
+
+        <p id="panel-message" class="panel-message" role="status" hidden></p>
+    </main>
+
+    <!-- Mola Başlat Modal -->
+    <div id="break-modal" class="modal-overlay" hidden>
+        <div class="modal admin-modal" role="dialog">
+            <div class="modal-header">
+                <h3>Mola Başlat</h3>
+                <button class="modal-close" id="break-modal-close" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="break-modal-employee" class="modal-employee-name"></p>
+                <label class="modal-label">Hazır Süreler</label>
+                <div class="duration-group" id="duration-group">
+                    <button type="button" class="duration-btn active" data-duration="15">15 dk</button>
+                    <button type="button" class="duration-btn" data-duration="30">30 dk</button>
+                    <button type="button" class="duration-btn" data-duration="60">60 dk</button>
+                </div>
+                <label class="modal-label" for="manual-duration">veya Manuel Süre (dk)</label>
+                <input type="number" id="manual-duration" class="manual-duration-input"
+                       min="1" max="480" placeholder="Örn: 45" inputmode="numeric">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" id="break-modal-cancel">İptal</button>
+                <button type="button" class="btn-modal-confirm" id="break-modal-confirm">Mola Başlat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personel Ekle Modal -->
+    <div id="add-modal" class="modal-overlay" hidden>
+        <div class="modal admin-modal" role="dialog">
+            <div class="modal-header">
+                <h3>Personel Ekle</h3>
+                <button class="modal-close" id="add-modal-close" type="button">&times;</button>
+            </div>
+            <form id="add-employee-form" class="modal-body">
+                <div class="modal-field">
+                    <label for="add-full-name">Ad Soyad</label>
+                    <input type="text" id="add-full-name" placeholder="Örn: Mehmet Kaya" required>
+                </div>
+                <div class="modal-field">
+                    <label for="add-employee-code">Kullanıcı Adı</label>
+                    <input type="text" id="add-employee-code" placeholder="Örn: mehmet_kaya" required>
+                </div>
+                <div class="modal-field">
+                    <label for="add-password">Başlangıç Şifresi</label>
+                    <input type="text" id="add-password" placeholder="Varsayılan: 123456" value="123456">
+                </div>
+                <p id="add-error" class="modal-error" hidden></p>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" id="add-modal-cancel">İptal</button>
+                <button type="submit" form="add-employee-form" class="btn-modal-confirm" id="add-modal-confirm">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geçmiş Analiz Modal -->
+    <div id="history-modal" class="modal-overlay" hidden>
+        <div class="modal admin-modal history-modal" role="dialog">
+            <div class="modal-header">
+                <h3>Geçmiş Analiz</h3>
+                <button class="modal-close" id="history-modal-close" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="history-modal-employee" class="modal-employee-name"></p>
+                <div class="history-filters" id="history-filters">
+                    <button type="button" class="history-filter-btn" data-period="bugun">Bugün</button>
+                    <button type="button" class="history-filter-btn active" data-period="dun">Dün</button>
+                    <button type="button" class="history-filter-btn" data-period="gecen_hafta">Geçen Hafta</button>
+                    <button type="button" class="history-filter-btn" data-period="tumu">Tümü</button>
+                </div>
+                <div class="history-stats" id="history-stats">
+                    <span id="history-total-records">0 kayıt</span>
+                    <span id="history-total-duration">0 dk toplam</span>
+                </div>
+                <div class="history-list-wrap">
+                    <ul class="history-list" id="history-list">
+                        <li class="history-loading">Yükleniyor…</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" id="history-modal-cancel">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Neon Onay Modal -->
+    <div id="confirm-modal" class="confirm-overlay" hidden>
+        <div class="confirm-modal" role="alertdialog" aria-labelledby="confirm-message">
+            <div class="confirm-glow"></div>
+            <p id="confirm-message" class="confirm-message"></p>
+            <div class="confirm-actions">
+                <button type="button" id="confirm-yes" class="btn-confirm-yes">Evet</button>
+                <button type="button" id="confirm-no" class="btn-confirm-no">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

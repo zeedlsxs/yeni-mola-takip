@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#DA291C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Mola Yönetim Merkezi">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>Mola Paneli — Mola Yönetim Sistemi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="employee-page">
+
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Tema değiştir" title="Tema değiştir">🌙</button>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <header class="employee-header">
+        <div class="employee-header-inner">
+            <div>
+                <span class="personel-badge">MOLA PANELİ</span>
+                <h1 id="emp-name">—</h1>
+                <p id="emp-code" class="emp-meta">—</p>
+            </div>
+            <button id="logout-btn" class="btn-logout" type="button">Çıkış Yap</button>
+        </div>
+    </header>
+
+    <main class="employee-main">
+        <!-- Neon İlerleme Çubuğu -->
+        <section id="neon-progress-wrap" class="neon-progress-wrap" hidden>
+            <h2 class="neon-progress-title">Mola Devam Ediyor</h2>
+            <div class="neon-progress-track">
+                <div id="neon-progress-bar" class="neon-progress-fill"></div>
+            </div>
+            <p id="neon-progress-text" class="neon-progress-text">00:00</p>
+            <p id="neon-progress-assigned" class="neon-progress-assigned"></p>
+        </section>
+
+        <section class="profile-card">
+            <h2>Profil Bilgilerim</h2>
+            <div class="profile-grid">
+                <div class="profile-item">
+                    <span class="profile-label">Kullanıcı Adı</span>
+                    <span id="profile-name" class="profile-value">—</span>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">Departman</span>
+                    <span id="profile-dept" class="profile-value">—</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="break-notification" class="break-notification idle">
+            <div class="notification-glow"></div>
+            <div class="notification-content">
+                <div id="notif-icon" class="notif-icon">☕</div>
+                <h2 id="notif-title">Çalışma Modundasınız</h2>
+                <p id="notif-message">Şu an aktif bir mola bulunmuyor.</p>
+                <p id="notif-assigned" class="notif-assigned" hidden></p>
+            </div>
+        </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

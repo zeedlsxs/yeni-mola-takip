@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#DA291C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Mola Yönetim Merkezi">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Personel mola takip ve yönetim uygulaması">
+    <title>Mola Yönetim Sistemi — Giriş</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker
+                    .register("./sw.js", { scope: "./" })
+                    .catch(function () { /* SW kaydı başarısız olabilir (file:// vb.) */ });
+            });
+        }
+    </script>
+</head>
+<body class="login-page">
+
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Tema değiştir" title="Tema değiştir">🌙</button>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <canvas id="rain-canvas" aria-hidden="true"></canvas>
+
+    <main class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">Mola Yönetim Sistemi</h1>
+
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab active" data-tab="login">Giriş Yap</button>
+                <button type="button" class="auth-tab" data-tab="register">Kayıt Ol</button>
+            </div>
+
+            <!-- Giriş Formu -->
+            <form id="login-form" class="auth-form" novalidate>
+                <div class="form-group">
+                    <label for="username">Kullanıcı Adı</label>
+                    <input type="text" id="username" placeholder="Kullanıcı adınız" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Şifre</label>
+                    <input type="password" id="password" placeholder="Şifreniz" autocomplete="current-password" required>
+                </div>
+                <p id="login-error" class="error-message" role="alert" hidden></p>
+                <button type="submit" id="login-btn" class="btn-primary">Giriş Yap</button>
+            </form>
+
+            <!-- Kayıt Formu -->
+            <form id="register-form" class="auth-form" hidden novalidate>
+                <div class="form-group">
+                    <label for="reg-username">Kullanıcı Adı</label>
+                    <input type="text" id="reg-username" placeholder="Benzersiz kullanıcı adı" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Şifre</label>
+                    <input type="password" id="reg-password" placeholder="En az 4 karakter" autocomplete="new-password" required>
+                </div>
+                <p id="register-error" class="error-message" role="alert" hidden></p>
+                <p id="register-success" class="success-message" hidden></p>
+                <button type="submit" id="register-btn" class="btn-primary">Kayıt Ol</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
