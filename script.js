@@ -35,9 +35,11 @@ function sleep(ms) {
 }
 
 function isSuperAdmin(user) {
-    return user?.is_super_admin === true
-        || (user?.employee_code || "").toUpperCase() === ADMIN_CODE
-        || user?.role === "yonetici";
+    if (!user) return false;
+    const roleStr = String(user.role || "").toLowerCase();
+    return user.is_super_admin === true
+        || (user.employee_code || "").toUpperCase() === ADMIN_CODE
+        || roleStr === "yonetici";
 }
 
 /** API hatalarını anlaşılır Türkçe mesaja çevirir */
