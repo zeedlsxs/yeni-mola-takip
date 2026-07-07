@@ -661,25 +661,41 @@ async function uploadShiftPhoto() {
     }
     
     const file = fileInput.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    
     const day = daySelect.value;
     
-    statusEl.textContent = "Yükleniyor...";
+    statusEl.textContent = "OCR işleniyor...";
     
     try {
+        // Client-side OCR with Tesseract.js
+        const result = await Tesseract.recognize(file, 'tur+eng', {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    statusEl.textContent = `OCR işleniyor... %${Math.round(m.progress * 100)}`;
+                }
+            }
+        });
+        
+        const detectedTexts = result.data.text.split('\n').filter(t => t.trim());
+        
+        statusEl.textContent = "Sunucuya gönderiliyor...";
+        
+        // Send OCR results to server
         const response = await fetch(`${API_BASE}/upload-shift?day=${encodeURIComponent(day)}`, {
             method: "POST",
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                texts: detectedTexts
+            })
         });
         
         if (!response.ok) {
-            throw new Error("Yükleme başarısız");
+            throw new Error("Sunucu hatası");
         }
         
-        const result = await response.json();
-        statusEl.textContent = `${result.updated_employees.length} personel güncellendi`;
+        const serverResult = await response.json();
+        statusEl.textContent = `${serverResult.updated_employees.length} personel güncellendi`;
         showToast("Vardiya bilgileri güncellendi", "success");
         
         // Canlı listeyi yeniden yükle

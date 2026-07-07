@@ -11,7 +11,7 @@ from typing import Annotated
 
 import os
 
-from fastapi import Depends, FastAPI, Query, Request, status, UploadFile, File
+from fastapi import Depends, FastAPI, Query, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -516,45 +516,22 @@ if _serve_frontend and (_frontend_dir / "index.html").is_file():
 @app.post(
     "/upload-shift",
     tags=["Vardiya"],
-    summary="Fotoğraftan vardiya yükle",
+    summary="Fotoğraftan vardiya yükle (Client-side OCR)",
 )
 async def upload_shift(
-    file: UploadFile = File(...),
+    ocr_data: dict,
     day: str = Query(..., description="Vardiya günü (Pazartesi-Pazar)"),
     db: Session = Depends(get_db),
 ):
     """
-    Yüklenen görseli EasyOCR ile işleyip personel isimlerini ve saatlerini çıkarır.
+    Client-side Tesseract.js'den gelen metin verisini işleyip personel isimlerini ve saatlerini çıkarır.
     Veritabanına vardiya bilgilerini günceller.
     """
-    import easyocr
-    import pandas as pd
-    import io
-    from PIL import Image
+    detected_texts = ocr_data.get("texts", [])
     
-    # Görseli oku
-    contents = await file.read()
-    image = Image.open(io.BytesIO(contents))
-    
-    # EasyOCR ile metin çıkarma
-    reader = easyocr.Reader(['tr', 'en'])
-    results = reader.readtext(image)
-    
-    # Sonuçları işle
-    detected_texts = []
-    for (bbox, text, confidence) in results:
-        if confidence > 0.5:  # Güvenlik eşiği
-            detected_texts.append({
-                'text': text,
-                'bbox': bbox,
-                'confidence': confidence
-            })
-    
-    # Personel isimlerini ve saatlerini çıkarma (basit mantık)
-    # Gerçek uygulamada daha karmaşık bir mantık gerekebilir
+    # Personel isimlerini ve saatlerini çıkarma
     detected_data = []
-    for item in detected_texts:
-        text = item['text']
+    for text in detected_texts:
         # Saat formatı kontrolü (örn: 07:30)
         if ':' in text and len(text) <= 5:
             detected_data.append({'type': 'time', 'value': text})
