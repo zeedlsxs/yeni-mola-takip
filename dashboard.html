@@ -34,28 +34,71 @@
 
     <!-- Panel Sekmeleri -->
     <nav class="panel-tabs" id="panel-tabs">
-        <button type="button" class="panel-tab active" data-panel="personel">Personel Listesi</button>
+        <button type="button" class="panel-tab active" data-panel="live">Canlı Personel Listesi</button>
+        <button type="button" class="panel-tab" data-panel="normal">Normal Personel Listesi</button>
         <button type="button" class="panel-tab" data-panel="users" id="users-tab">Kullanıcı Yönetimi</button>
     </nav>
 
     <main class="dashboard-main wide">
 
-        <!-- Personel Listesi Sekmesi -->
-        <section id="panel-personel" class="panel-section">
+        <!-- Canlı Personel Listesi Sekmesi -->
+        <section id="panel-live" class="panel-section">
             <div class="panel-toolbar">
-                <h2>Personel Listesi</h2>
-                <span id="employee-count" class="employee-count"></span>
+                <h2>Canlı Personel Listesi</h2>
+                <span id="live-count" class="employee-count"></span>
             </div>
 
-            <div class="table-wrapper admin-table" id="employee-cards-wrapper">
-                <table class="employee-table compact-table" id="employee-table">
+            <!-- Fotoğraf Yükleme Alanı -->
+            <div class="shift-upload-section">
+                <div class="upload-controls">
+                    <input type="file" id="shift-photo" accept="image/*" class="file-input" hidden>
+                    <button type="button" id="upload-photo-btn" class="btn-upload">📷 Fotoğraf Yükle</button>
+                    <select id="day-select" class="day-select">
+                        <option value="Pazartesi">Pazartesi</option>
+                        <option value="Salı">Salı</option>
+                        <option value="Çarşamba">Çarşamba</option>
+                        <option value="Perşembe">Perşembe</option>
+                        <option value="Cuma">Cuma</option>
+                        <option value="Cumartesi">Cumartesi</option>
+                        <option value="Pazar">Pazar</option>
+                    </select>
+                </div>
+                <p id="upload-status" class="upload-status"></p>
+            </div>
+
+            <div class="table-wrapper admin-table" id="live-cards-wrapper">
+                <table class="employee-table compact-table" id="live-table">
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                            <th>Vardiya Saati</th>
+                            <th>Durum</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="live-tbody">
+                        <tr><td colspan="4" class="table-loading">Yükleniyor…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Normal Personel Listesi Sekmesi -->
+        <section id="panel-normal" class="panel-section" hidden>
+            <div class="panel-toolbar">
+                <h2>Normal Personel Listesi</h2>
+                <span id="normal-count" class="employee-count"></span>
+            </div>
+
+            <div class="table-wrapper admin-table" id="normal-cards-wrapper">
+                <table class="employee-table compact-table" id="normal-table">
                     <thead>
                         <tr>
                             <th>Ad Soyad</th>
                             <th>Durum</th>
                         </tr>
                     </thead>
-                    <tbody id="employee-tbody">
+                    <tbody id="normal-tbody">
                         <tr><td colspan="2" class="table-loading">Yükleniyor…</td></tr>
                     </tbody>
                 </table>

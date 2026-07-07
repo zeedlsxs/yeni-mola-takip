@@ -1850,6 +1850,75 @@ body {
 }
 
 /* ==========================================================================
+   Fotoğraf Yükleme Alanı
+   ========================================================================== */
+
+.shift-upload-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.upload-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-upload {
+    background: var(--admin-accent);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-upload:hover {
+    background: #14b8a6;
+    transform: translateY(-1px);
+}
+
+.day-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.day-select:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+}
+
+.upload-status {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Canlı Tablo Sütunları
+   ========================================================================== */
+
+.cell-time {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.cell-action {
+    text-align: right;
+}
+
+/* ==========================================================================
    Tema Değiştirici
    ========================================================================== */
 

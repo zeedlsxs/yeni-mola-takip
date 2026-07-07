@@ -367,29 +367,6 @@ function initLoginPage() {
 // Yönetici Paneli
 // ---------------------------------------------------------------------------
 
-async function loadEmployees() {
-    const [overview, summary] = await Promise.all([
-        apiRequest("/employees/overview"),
-        apiRequest("/dashboard/summary"),
-    ]);
-    employees = overview;
-    dashboardSummary = summary;
-    renderDashboardSummary();
-    renderEmployeeTable();
-    const countEl = document.getElementById("employee-count");
-    if (countEl) countEl.textContent = `${employees.length} personel`;
-}
-
-function renderDashboardSummary() {
-    if (!dashboardSummary) return;
-    const activeEl = document.getElementById("summary-active");
-    const breakEl = document.getElementById("summary-on-break");
-    const exhaustedEl = document.getElementById("summary-exhausted");
-    if (activeEl) activeEl.textContent = dashboardSummary.toplam_aktif_personel ?? 0;
-    if (breakEl) breakEl.textContent = dashboardSummary.su_an_molada ?? 0;
-    if (exhaustedEl) exhaustedEl.textContent = dashboardSummary.mola_hakki_biten ?? 0;
-}
-
 function formatDateTime(iso) {
     if (!iso) return "—";
     const d = new Date(iso);
@@ -453,57 +430,6 @@ async function loadBreakHistory() {
     } catch (err) {
         listEl.innerHTML = `<li class="history-empty error-text">${err.message}</li>`;
     }
-}
-
-function renderEmployeeTable() {
-    const tbody = document.getElementById("employee-tbody");
-    if (!tbody) return;
-
-    if (!employees.length) {
-        tbody.innerHTML = `<tr><td colspan="2" class="table-empty">Henüz personel eklenmemiş.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = employees.map((emp) => {
-        const onBreak = emp.work_status === "molada";
-        const remaining = emp.active_break?.remaining_seconds ?? 0;
-        const quotaExhausted = emp.mola_hakki_bitti === true;
-
-        const exhaustedIcon = quotaExhausted && !onBreak
-            ? `<span class="quota-exhausted-icon" title="Mola Bitti">🔴</span>`
-            : "";
-
-        const statusHtml = onBreak
-            ? `<div class="status-cell-inner">
-                   <span class="badge badge-break">Molada</span>
-                   <span class="countdown" data-employee-id="${emp.id}"
-                         data-remaining="${remaining}">${formatCountdown(remaining)}</span>
-               </div>`
-            : `<div class="status-cell-inner"><span class="badge badge-work">Çalışıyor</span></div>`;
-
-        return `<tr class="employee-row compact-row ${quotaExhausted && !onBreak ? "row-quota-exhausted" : ""}" 
-                    data-employee-id="${emp.id}"
-                    data-full-name="${emp.full_name}"
-                    data-employee-code="${emp.employee_code}"
-                    data-work-status="${emp.work_status}"
-                    data-kullanilan-mola="${emp.kullanilan_mola ?? 0}"
-                    data-mola-hakki-limit="${emp.mola_hakki_limit ?? 2}"
-                    data-mola-hakki-bitti="${quotaExhausted}"
-                    data-can-start-break="${emp.can_start_break === true}"
-                    data-bugunku-toplam-mola="${emp.bugunku_toplam_mola_dk ?? 0}"
-                    data-remaining="${remaining}">
-            <td class="cell-name">
-                <span class="name-with-icon">${exhaustedIcon}${emp.full_name}</span>
-            </td>
-            <td class="cell-status">${statusHtml}</td>
-        </tr>`;
-    }).join("");
-
-    document.querySelectorAll(".employee-row").forEach((row) => {
-        row.addEventListener("click", () => openEmployeeDetailModal(row));
-    });
-    
-    startAdminCountdowns();
 }
 
 function openEmployeeDetailModal(row) {
@@ -600,7 +526,7 @@ async function autoEndBreak(employeeId) {
         });
         showPanelMessage("Mola süresi doldu, otomatik sonlandırıldı.", "info");
     } catch { /* ignore */ }
-    await loadEmployees();
+    await loadLiveEmployees();
 }
 
 function openBreakModal(employeeId, name) {
@@ -641,7 +567,7 @@ async function confirmStartBreak() {
         });
         closeBreakModal();
         showPanelMessage(`Mola başlatıldı (${duration} dk)`, "success");
-        await loadEmployees();
+        await loadLiveEmployees();
     } catch (err) {
         showPanelMessage(err.message, "error");
     } finally {
@@ -656,7 +582,7 @@ async function endEmployeeBreak(employeeId) {
             body: JSON.stringify({ is_on_break: false }),
         });
         showPanelMessage("Mola sonlandırıldı.", "success");
-        await loadEmployees();
+        await loadLiveEmployees();
     } catch (err) {
         showPanelMessage(err.message, "error");
     }
@@ -692,7 +618,7 @@ async function handleAddEmployee(e) {
         });
         closeAddModal();
         showPanelMessage("Personel eklendi.", "success");
-        await loadEmployees();
+        await loadLiveEmployees();
     } catch (err) {
         errEl.textContent = err.message;
         errEl.hidden = false;
@@ -711,10 +637,166 @@ function initPanelTabs() {
             document.querySelectorAll(".panel-tab").forEach((t) => t.classList.remove("active"));
             tab.classList.add("active");
             const panel = tab.dataset.panel;
-            document.getElementById("panel-personel").hidden = panel !== "personel";
+            document.getElementById("panel-live").hidden = panel !== "live";
+            document.getElementById("panel-normal").hidden = panel !== "normal";
             document.getElementById("panel-users").hidden = panel !== "users";
+            
+            if (panel === "live") {
+                loadLiveEmployees();
+            } else if (panel === "normal") {
+                loadNormalEmployees();
+            }
         });
     });
+}
+
+async function uploadShiftPhoto() {
+    const fileInput = document.getElementById("shift-photo");
+    const daySelect = document.getElementById("day-select");
+    const statusEl = document.getElementById("upload-status");
+    
+    if (!fileInput.files[0]) {
+        showToast("Lütfen bir fotoğraf seçin", "error");
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const day = daySelect.value;
+    
+    statusEl.textContent = "Yükleniyor...";
+    
+    try {
+        const response = await fetch(`${API_BASE}/upload-shift?day=${encodeURIComponent(day)}`, {
+            method: "POST",
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error("Yükleme başarısız");
+        }
+        
+        const result = await response.json();
+        statusEl.textContent = `${result.updated_employees.length} personel güncellendi`;
+        showToast("Vardiya bilgileri güncellendi", "success");
+        
+        // Canlı listeyi yeniden yükle
+        loadLiveEmployees();
+        
+        // Dosya input'unu temizle
+        fileInput.value = "";
+    } catch (err) {
+        statusEl.textContent = "Hata: " + err.message;
+        showToast("Yükleme başarısız: " + err.message, "error");
+    }
+}
+
+async function loadLiveEmployees() {
+    try {
+        const overview = await apiRequest("/employees/overview");
+        const liveEmployees = overview.filter(emp => emp.vardiya_saati && emp.vardiya_gunu);
+        
+        // Vardiya saatine göre sırala (07:30 < 09:00)
+        liveEmployees.sort((a, b) => {
+            const timeA = a.vardiya_saati || "00:00";
+            const timeB = b.vardiya_saati || "00:00";
+            return timeA.localeCompare(timeB);
+        });
+        
+        renderLiveTable(liveEmployees);
+        
+        const countEl = document.getElementById("live-count");
+        if (countEl) countEl.textContent = `${liveEmployees.length} personel`;
+    } catch (err) {
+        showToast("Canlı liste yüklenemedi: " + err.message, "error");
+    }
+}
+
+async function loadNormalEmployees() {
+    try {
+        const overview = await apiRequest("/employees/overview");
+        const normalEmployees = overview.filter(emp => !emp.vardiya_saati || !emp.vardiya_gunu);
+        
+        renderNormalTable(normalEmployees);
+        
+        const countEl = document.getElementById("normal-count");
+        if (countEl) countEl.textContent = `${normalEmployees.length} personel`;
+    } catch (err) {
+        showToast("Normal liste yüklenemedi: " + err.message, "error");
+    }
+}
+
+function renderLiveTable(liveEmployees) {
+    const tbody = document.getElementById("live-tbody");
+    if (!tbody) return;
+    
+    if (!liveEmployees.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="table-empty">Henüz canlı personel yok.</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = liveEmployees.map(emp => {
+        const onBreak = emp.work_status === "molada";
+        const remaining = emp.active_break?.remaining_seconds ?? 0;
+        
+        const statusHtml = onBreak
+            ? `<div class="status-cell-inner">
+                   <span class="badge badge-break">Molada</span>
+                   <span class="countdown" data-employee-id="${emp.id}"
+                         data-remaining="${remaining}">${formatCountdown(remaining)}</span>
+               </div>`
+            : `<div class="status-cell-inner"><span class="badge badge-work">Çalışıyor</span></div>`;
+        
+        const actionHtml = onBreak
+            ? `<button class="btn-row btn-end-break" data-id="${emp.id}" type="button">Mola Bitir</button>`
+            : `<button class="btn-row btn-add-break" data-id="${emp.id}"
+                    data-name="${emp.full_name}" type="button">Mola Başlat</button>`;
+        
+        return `<tr class="employee-row compact-row">
+            <td class="cell-name">${emp.full_name}</td>
+            <td class="cell-time">${emp.vardiya_saati || "—"}</td>
+            <td class="cell-status">${statusHtml}</td>
+            <td class="cell-action">${actionHtml}</td>
+        </tr>`;
+    }).join("");
+    
+    // Event listener'ları ekle
+    document.querySelectorAll(".btn-end-break").forEach((btn) => {
+        btn.addEventListener("click", () => endEmployeeBreak(+btn.dataset.id));
+    });
+    document.querySelectorAll(".btn-add-break").forEach((btn) => {
+        btn.addEventListener("click", () => openBreakModal(+btn.dataset.id, btn.dataset.name));
+    });
+}
+
+function renderNormalTable(normalEmployees) {
+    const tbody = document.getElementById("normal-tbody");
+    if (!tbody) return;
+    
+    if (!normalEmployees.length) {
+        tbody.innerHTML = `<tr><td colspan="2" class="table-empty">Henüz normal personel yok.</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = normalEmployees.map(emp => {
+        const onBreak = emp.work_status === "molada";
+        const remaining = emp.active_break?.remaining_seconds ?? 0;
+        
+        const statusHtml = onBreak
+            ? `<div class="status-cell-inner">
+                   <span class="badge badge-break">Molada</span>
+                   <span class="countdown" data-employee-id="${emp.id}"
+                         data-remaining="${remaining}">${formatCountdown(remaining)}</span>
+               </div>`
+            : `<div class="status-cell-inner"><span class="badge badge-work">Çalışıyor</span></div>`;
+        
+        return `<tr class="employee-row compact-row">
+            <td class="cell-name">${emp.full_name}</td>
+            <td class="cell-status">${statusHtml}</td>
+        </tr>`;
+    }).join("");
 }
 
 async function searchUsers() {
@@ -798,7 +880,7 @@ async function deleteUser(userId, username) {
                 await apiRequest(`/users/${userId}`, { method: "DELETE" });
                 showPanelMessage(`${username} silindi.`, "success");
                 showToast(`${username} başarıyla silindi.`, "success");
-                await loadEmployees();
+                await loadLiveEmployees();
                 const searchInput = document.getElementById("user-search-input");
                 if (searchInput?.value.trim()) searchUsers();
             } catch (err) {
@@ -854,6 +936,12 @@ function initAdminPage() {
     document.getElementById("add-employee-form")?.addEventListener("submit", handleAddEmployee);
     document.getElementById("logout-btn")?.addEventListener("click", logout);
 
+    // Fotoğraf yükleme event listener
+    document.getElementById("upload-photo-btn")?.addEventListener("click", () => {
+        document.getElementById("shift-photo").click();
+    });
+    document.getElementById("shift-photo")?.addEventListener("change", uploadShiftPhoto);
+
     // Info modal event listeners
     const infoBtn = document.getElementById("info-btn");
     if (infoBtn && isSuperAdmin(user)) {
@@ -888,8 +976,8 @@ function initAdminPage() {
         if (e.key === "Enter") searchUsers();
     });
 
-    loadEmployees();
-    refreshInterval = setInterval(loadEmployees, 15000);
+    loadLiveEmployees();
+    refreshInterval = setInterval(loadLiveEmployees, 15000);
 }
 
 // ---------------------------------------------------------------------------

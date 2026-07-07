@@ -72,6 +72,12 @@ class Employee(Base):
     mola_kota_tarihi: Mapped[date | None] = mapped_column(
         Date, nullable=True, comment="Mola kotasının geçerli olduğu gün"
     )
+    vardiya_saati: Mapped[str | None] = mapped_column(
+        String(10), nullable=True, comment="Vardiya başlama saati (örn: 07:30)"
+    )
+    vardiya_gunu: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, comment="Vardiya günü (Pazartesi-Pazar)"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

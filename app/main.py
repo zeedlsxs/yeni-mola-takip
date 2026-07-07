@@ -11,7 +11,7 @@ from typing import Annotated
 
 import os
 
-from fastapi import Depends, FastAPI, Query, Request, status
+from fastapi import Depends, FastAPI, Query, Request, status, UploadFile, File
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -22,7 +22,7 @@ from app import crud
 from app.database import get_db, init_db
 from app.errors import translate_validation_errors
 from app.exceptions import MolaSistemiException
-from app.models import BreakStatus, BreakType
+from app.models import BreakStatus, BreakType, Employee
 from app.schemas import (
     AuthResponse,
     BreakEnd,
@@ -511,3 +511,82 @@ _frontend_dir = Path(__file__).resolve().parent.parent
 
 if _serve_frontend and (_frontend_dir / "index.html").is_file():
     app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
+
+
+@app.post(
+    "/upload-shift",
+    tags=["Vardiya"],
+    summary="Fotoğraftan vardiya yükle",
+)
+async def upload_shift(
+    file: UploadFile = File(...),
+    day: str = Query(..., description="Vardiya günü (Pazartesi-Pazar)"),
+    db: Session = Depends(get_db),
+):
+    """
+    Yüklenen görseli EasyOCR ile işleyip personel isimlerini ve saatlerini çıkarır.
+    Veritabanına vardiya bilgilerini günceller.
+    """
+    import easyocr
+    import pandas as pd
+    import io
+    from PIL import Image
+    
+    # Görseli oku
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents))
+    
+    # EasyOCR ile metin çıkarma
+    reader = easyocr.Reader(['tr', 'en'])
+    results = reader.readtext(image)
+    
+    # Sonuçları işle
+    detected_texts = []
+    for (bbox, text, confidence) in results:
+        if confidence > 0.5:  # Güvenlik eşiği
+            detected_texts.append({
+                'text': text,
+                'bbox': bbox,
+                'confidence': confidence
+            })
+    
+    # Personel isimlerini ve saatlerini çıkarma (basit mantık)
+    # Gerçek uygulamada daha karmaşık bir mantık gerekebilir
+    detected_data = []
+    for item in detected_texts:
+        text = item['text']
+        # Saat formatı kontrolü (örn: 07:30)
+        if ':' in text and len(text) <= 5:
+            detected_data.append({'type': 'time', 'value': text})
+        # İsim kontrolü (basit)
+        elif len(text.split()) >= 2 and text.replace(' ', '').isalpha():
+            detected_data.append({'type': 'name', 'value': text})
+    
+    # Veritabanını güncelle
+    updated_employees = []
+    for data in detected_data:
+        if data['type'] == 'name':
+            # Personel adına göre bul
+            employee = db.query(Employee).filter(
+                Employee.full_name.ilike(f"%{data['value']}%")
+            ).first()
+            if employee:
+                employee.vardiya_gunu = day
+                # İsimden sonraki saat bilgisini bul
+                idx = detected_data.index(data)
+                if idx + 1 < len(detected_data) and detected_data[idx + 1]['type'] == 'time':
+                    employee.vardiya_saati = detected_data[idx + 1]['value']
+                updated_employees.append({
+                    'id': employee.id,
+                    'full_name': employee.full_name,
+                    'vardiya_saati': employee.vardiya_saati,
+                    'vardiya_gunu': employee.vardiya_gunu
+                })
+    
+    db.commit()
+    
+    return {
+        "message": "Vardiya bilgileri güncellendi",
+        "detected_count": len(detected_texts),
+        "updated_employees": updated_employees
+    }
