@@ -392,9 +392,12 @@ function renderDashboardSummary() {
 
 async function loadStatistics() {
     try {
+        console.log("İstatistikler yükleniyor...");
         const stats = await apiRequest("/dashboard/statistics");
+        console.log("İstatistikler yüklendi:", stats);
         renderStatistics(stats);
     } catch (err) {
+        console.error("İstatistikler yüklenemedi:", err);
         showToast("İstatistikler yüklenemedi: " + err.message, "error");
     }
 }
@@ -409,15 +412,19 @@ function renderStatistics(stats) {
     if (breakEl) breakEl.textContent = stats.su_an_molada ?? 0;
     if (totalEl) totalEl.textContent = stats.son_24_saat_toplam_mola_dk ?? 0;
     
-    if (tbody && stats.personel_bazli_istatistikler) {
-        tbody.innerHTML = stats.personel_bazli_istatistikler.map(p => `
-            <tr>
-                <td>${p.full_name}</td>
-                <td>${p.employee_code}</td>
-                <td>${p.kullanilan_mola}</td>
-                <td>${p.is_on_break ? '<span class="badge badge-break">Molada</span>' : '<span class="badge badge-work">Çalışıyor</span>'}</td>
-            </tr>
-        `).join("");
+    if (tbody) {
+        if (!stats.personel_bazli_istatistikler || stats.personel_bazli_istatistikler.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="table-empty">Henüz personel verisi yok.</td></tr>`;
+        } else {
+            tbody.innerHTML = stats.personel_bazli_istatistikler.map(p => `
+                <tr>
+                    <td>${p.full_name}</td>
+                    <td>${p.employee_code}</td>
+                    <td>${p.kullanilan_mola}</td>
+                    <td>${p.is_on_break ? '<span class="badge badge-break">Molada</span>' : '<span class="badge badge-work">Çalışıyor</span>'}</td>
+                </tr>
+            `).join("");
+        }
     }
 }
 
@@ -562,7 +569,7 @@ function openEmployeeDetailModal(row) {
     statusEl.className = "badge " + (onBreak ? "badge-break" : "badge-work");
     
     document.getElementById("detail-total-break").textContent = bugunkuToplamMola + " dk";
-    document.getElementById("detail-quota").textContent = kullanilanMola + " / " + molaHakkiLimit + " dk";
+    document.getElementById("detail-quota").textContent = kullanilanMola + " / " + molaHakkiLimit;
     
     // Butonları ayarla
     const startBtn = document.getElementById("detail-start-break-btn");

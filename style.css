@@ -1832,6 +1832,29 @@ body {
 
 .info-modal {
     max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .info-modal {
+        max-width: 95vw;
+        max-height: 85vh;
+        margin: 1rem;
+    }
+    
+    .info-content h4 {
+        font-size: 0.95rem;
+    }
+    
+    .info-list {
+        font-size: 0.9rem;
+        padding-left: 1rem;
+    }
+    
+    .info-list li {
+        margin-bottom: 0.4rem;
+    }
 }
 
 .info-content h4 {
