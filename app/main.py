@@ -227,17 +227,6 @@ def get_dashboard_summary(db: DbSession) -> DashboardSummary:
 
 
 @app.get(
-    "/dashboard/statistics",
-    response_model=DashboardStatistics,
-    tags=["Dashboard"],
-    summary="Detaylı istatistikler",
-)
-def get_dashboard_statistics(db: DbSession) -> DashboardStatistics:
-    """Yönetici paneli detaylı istatistiklerini döndürür."""
-    return crud.get_dashboard_statistics(db)
-
-
-@app.get(
     "/employees/{employee_id}/history",
     response_model=BreakHistoryResponse,
     tags=["Çalışanlar"],

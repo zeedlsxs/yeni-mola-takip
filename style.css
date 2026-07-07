@@ -446,88 +446,6 @@ body {
     max-width: 68.75rem;
 }
 
-.summary-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
-
-.summary-card {
-    position: relative;
-    background: var(--dash-surface);
-    border: 1px solid var(--dash-border);
-    border-radius: 12px;
-    padding: 1.1rem 1.25rem;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.summary-card:hover {
-    transform: translateY(-2px);
-}
-
-.summary-card-glow {
-    position: absolute;
-    inset: 0;
-    border-radius: 12px;
-    pointer-events: none;
-    opacity: 0.55;
-}
-
-.summary-card--active {
-    border-color: rgba(37, 99, 235, 0.45);
-    box-shadow: 0 0 18px rgba(37, 99, 235, 0.15);
-}
-
-.summary-card--active .summary-card-glow {
-    box-shadow: inset 0 0 20px rgba(37, 99, 235, 0.08);
-    border: 1px solid rgba(37, 99, 235, 0.25);
-}
-
-.summary-card--break {
-    border-color: rgba(0, 255, 204, 0.35);
-    box-shadow: 0 0 18px var(--neon-shadow);
-}
-
-.summary-card--break .summary-card-glow {
-    box-shadow: inset 0 0 24px rgba(0, 255, 204, 0.1);
-    border: 1px solid rgba(0, 255, 204, 0.3);
-}
-
-.summary-card--exhausted {
-    border-color: rgba(220, 38, 38, 0.4);
-    box-shadow: 0 0 18px rgba(220, 38, 38, 0.15);
-}
-
-.summary-card--exhausted .summary-card-glow {
-    box-shadow: inset 0 0 20px rgba(220, 38, 38, 0.08);
-    border: 1px solid rgba(220, 38, 38, 0.25);
-}
-
-.summary-card-label {
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--dash-muted);
-    margin-bottom: 0.45rem;
-}
-
-.summary-card-value {
-    display: block;
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1.1;
-    color: var(--dash-text);
-    font-variant-numeric: tabular-nums;
-}
-
-.summary-card--active .summary-card-value { color: var(--dash-blue); }
-.summary-card--break .summary-card-value { color: var(--neon-color); }
-.summary-card--exhausted .summary-card-value { color: var(--dash-red); }
-
 /* Geçmiş Analiz Modal */
 .history-modal .modal-body {
     max-height: 65vh;
@@ -1732,101 +1650,6 @@ body {
 }
 
 /* ==========================================================================
-   İstatistikler Sekmesi
-   ========================================================================== */
-
-.statistics-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.stat-card--active {
-    border-color: var(--dash-blue);
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
-}
-
-.stat-card--break {
-    border-color: var(--dash-green);
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent);
-}
-
-.stat-card--total {
-    border-color: var(--admin-accent);
-    background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), transparent);
-}
-
-.stat-card-label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-}
-
-.stat-card-value {
-    display: block;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.stat-card-unit {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-left: 0.25rem;
-}
-
-.statistics-table-wrapper {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-}
-
-.statistics-table-wrapper h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.statistics-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.statistics-table th,
-.statistics-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.statistics-table th {
-    background: var(--table-header-bg);
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.statistics-table tr:hover {
-    background: var(--table-hover-bg);
-}
-
-/* ==========================================================================
    Info Modal Styles
    ========================================================================== */
 
@@ -1974,6 +1797,34 @@ body {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.quota-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem 0;
+    padding: 2rem;
+    background: var(--card-bg);
+    border: 2px solid var(--admin-accent);
+    border-radius: 1rem;
+    text-align: center;
+}
+
+.quota-label {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.quota-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
 }
 
 .employee-detail-actions {

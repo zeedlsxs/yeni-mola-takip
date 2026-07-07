@@ -32,31 +32,9 @@
         </div>
     </header>
 
-    <!-- Günün Özeti -->
-    <section class="summary-section wide" id="summary-section">
-        <div class="summary-cards">
-            <div class="summary-card summary-card--active">
-                <div class="summary-card-glow"></div>
-                <span class="summary-card-label">Toplam Aktif Personel</span>
-                <span class="summary-card-value" id="summary-active">—</span>
-            </div>
-            <div class="summary-card summary-card--break">
-                <div class="summary-card-glow"></div>
-                <span class="summary-card-label">Şu An Molada</span>
-                <span class="summary-card-value" id="summary-on-break">—</span>
-            </div>
-            <div class="summary-card summary-card--exhausted">
-                <div class="summary-card-glow"></div>
-                <span class="summary-card-label">Mola Hakkı Biten</span>
-                <span class="summary-card-value" id="summary-exhausted">—</span>
-            </div>
-        </div>
-    </section>
-
     <!-- Panel Sekmeleri -->
     <nav class="panel-tabs" id="panel-tabs">
         <button type="button" class="panel-tab active" data-panel="personel">Personel Listesi</button>
-        <button type="button" class="panel-tab" data-panel="statistics" id="statistics-tab">İstatistikler</button>
         <button type="button" class="panel-tab" data-panel="users" id="users-tab">Kullanıcı Yönetimi</button>
     </nav>
 
@@ -79,46 +57,6 @@
                     </thead>
                     <tbody id="employee-tbody">
                         <tr><td colspan="2" class="table-loading">Yükleniyor…</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- İstatistikler Sekmesi -->
-        <section id="panel-statistics" class="panel-section" hidden>
-            <div class="panel-toolbar">
-                <h2>Dashboard İstatistikleri</h2>
-            </div>
-
-            <div class="statistics-cards">
-                <div class="stat-card stat-card--active">
-                    <span class="stat-card-label">Aktif Personel</span>
-                    <span class="stat-card-value" id="stat-active">—</span>
-                </div>
-                <div class="stat-card stat-card--break">
-                    <span class="stat-card-label">Şu An Molada</span>
-                    <span class="stat-card-value" id="stat-on-break">—</span>
-                </div>
-                <div class="stat-card stat-card--total">
-                    <span class="stat-card-label">Son 24 Saat Toplam Mola</span>
-                    <span class="stat-card-value" id="stat-24h-total">—</span>
-                    <span class="stat-card-unit">dakika</span>
-                </div>
-            </div>
-
-            <div class="statistics-table-wrapper">
-                <h3>Personel Bazlı Raporlar</h3>
-                <table class="statistics-table">
-                    <thead>
-                        <tr>
-                            <th>Ad Soyad</th>
-                            <th>Kullanıcı Adı</th>
-                            <th>Kullanılan Mola (dk)</th>
-                            <th>Durum</th>
-                        </tr>
-                    </thead>
-                    <tbody id="statistics-tbody">
-                        <tr><td colspan="4" class="table-loading">Yükleniyor…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -295,15 +233,9 @@
                         <span id="detail-status" class="badge">—</span>
                     </div>
                     
-                    <div class="employee-detail-stats">
-                        <div class="detail-stat">
-                            <span class="detail-stat-label">Bugünkü Toplam Mola</span>
-                            <span class="detail-stat-value" id="detail-total-break">— dk</span>
-                        </div>
-                        <div class="detail-stat">
-                            <span class="detail-stat-label">Mola Hakkı</span>
-                            <span class="detail-stat-value" id="detail-quota">— / 60 dk</span>
-                        </div>
+                    <div class="quota-display">
+                        <span class="quota-label">Mola Hakkı</span>
+                        <span class="quota-value" id="detail-quota">— / —</span>
                     </div>
                     
                     <div class="employee-detail-actions">
