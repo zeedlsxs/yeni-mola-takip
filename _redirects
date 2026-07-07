@@ -1,0 +1,18 @@
+# Netlify _redirects — API proxy + sayfa yönlendirmeleri
+# ÖNEMLİ: publish=frontend olduğu için bu dosya frontend/ içinde olmalıdır.
+# Kurallar yukarıdan aşağıya işlenir; API kuralları SPA catch-all'dan ÖNCE gelmelidir.
+
+# --- API → Mangum handler ---
+/health              /.netlify/functions/api    200
+/auth/*              /.netlify/functions/api    200
+/employees/*         /.netlify/functions/api    200
+/users/*             /.netlify/functions/api    200
+/breaks/*            /.netlify/functions/api    200
+/dashboard/summary   /.netlify/functions/api    200
+
+# --- Uzantısız sayfa URL'leri ---
+/dashboard           /dashboard.html            200
+/employee            /employee.html             200
+
+# --- SPA / sayfa yenileme fallback (en sonda) ---
+/*                   /index.html                200
