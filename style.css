@@ -1856,6 +1856,126 @@ body {
 }
 
 /* ==========================================================================
+   Kompakt Personel Tablosu
+   ========================================================================== */
+
+.compact-table {
+    font-size: 0.95rem;
+}
+
+.compact-table th,
+.compact-table td {
+    padding: 0.75rem 1rem;
+}
+
+.compact-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.compact-row:hover {
+    background-color: var(--table-hover-bg);
+}
+
+.compact-row .cell-name {
+    font-weight: 500;
+}
+
+.compact-row .cell-status {
+    text-align: right;
+}
+
+/* ==========================================================================
+   Personel Detay Modal
+   ========================================================================== */
+
+.employee-detail-modal {
+    max-width: 450px;
+}
+
+.employee-detail-content {
+    padding: 0.5rem;
+}
+
+.employee-detail-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.employee-detail-header h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.employee-detail-header #detail-code {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.employee-detail-header #detail-status {
+    display: inline-block;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 1rem;
+}
+
+.employee-detail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.detail-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.detail-stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.employee-detail-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.btn-modal-secondary {
+    background: var(--border-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-secondary:hover {
+    background: var(--text-muted);
+    color: #fff;
+}
+
+/* ==========================================================================
    Tema Değiştirici
    ========================================================================== */
 

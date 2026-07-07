@@ -491,18 +491,14 @@ function renderEmployeeTable() {
     if (!tbody) return;
 
     if (!employees.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="table-empty">Henüz personel eklenmemiş.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" class="table-empty">Henüz personel eklenmemiş.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = employees.map((emp) => {
         const onBreak = emp.work_status === "molada";
         const remaining = emp.active_break?.remaining_seconds ?? 0;
-        const quotaUsed = emp.kullanilan_mola ?? 0;
-        const quotaLimit = emp.mola_hakki_limit ?? 2;
         const quotaExhausted = emp.mola_hakki_bitti === true;
-        const canStart = emp.can_start_break === true;
-        const totalMinutes = emp.bugunku_toplam_mola_dk ?? 0;
 
         const exhaustedIcon = quotaExhausted && !onBreak
             ? `<span class="quota-exhausted-icon" title="Mola Bitti">🔴</span>`
@@ -516,56 +512,100 @@ function renderEmployeeTable() {
                </div>`
             : `<div class="status-cell-inner"><span class="badge badge-work">Çalışıyor</span></div>`;
 
-        const quotaBadge = `<span class="quota-badge ${quotaExhausted ? "quota-full" : ""}">${quotaUsed}/${quotaLimit}</span>`;
-
-        let startBtnHtml;
-        if (onBreak) {
-            startBtnHtml = `<button class="btn-row btn-end-break" data-id="${emp.id}" type="button">Mola Bitir</button>`;
-        } else if (quotaExhausted) {
-            startBtnHtml = `<button class="btn-row btn-quota-disabled" type="button" disabled title="Mola Hakkı Bitti">Mola Hakkı Bitti</button>`;
-        } else if (canStart) {
-            startBtnHtml = `<button class="btn-row btn-add-break" data-id="${emp.id}"
-                                    data-name="${emp.full_name}" type="button"
-                                    title="Mola Başlat" aria-label="Mola Başlat">+</button>`;
-        } else {
-            startBtnHtml = `<button class="btn-row btn-quota-disabled" type="button" disabled>Mola Başlatılamaz</button>`;
-        }
-
-        const actionHtml = `<div class="action-buttons">
-            ${startBtnHtml}
-            <button class="btn-row btn-delete" data-id="${emp.id}"
-                    data-name="${emp.employee_code}" type="button" title="Sil">🗑️</button>
-        </div>`;
-
-        return `<tr class="employee-row ${quotaExhausted && !onBreak ? "row-quota-exhausted" : ""}">
-            <td class="cell-name" data-label="Ad Soyad">
-                <button type="button" class="employee-name-link" data-id="${emp.id}"
-                        data-name="${emp.full_name}" title="Geçmiş analiz">
-                    <span class="name-with-icon">${exhaustedIcon}${emp.full_name}</span>
-                </button>
-                <span class="quota-inline">Mola Hakkı: ${quotaUsed}/${quotaLimit}</span>
+        return `<tr class="employee-row compact-row ${quotaExhausted && !onBreak ? "row-quota-exhausted" : ""}" 
+                    data-employee-id="${emp.id}"
+                    data-full-name="${emp.full_name}"
+                    data-employee-code="${emp.employee_code}"
+                    data-work-status="${emp.work_status}"
+                    data-kullanilan-mola="${emp.kullanilan_mola ?? 0}"
+                    data-mola-hakki-limit="${emp.mola_hakki_limit ?? 2}"
+                    data-mola-hakki-bitti="${quotaExhausted}"
+                    data-can-start-break="${emp.can_start_break === true}"
+                    data-bugunku-toplam-mola="${emp.bugunku_toplam_mola_dk ?? 0}"
+                    data-remaining="${remaining}">
+            <td class="cell-name">
+                <span class="name-with-icon">${exhaustedIcon}${emp.full_name}</span>
             </td>
-            <td class="cell-code" data-label="Kullanıcı Adı">${emp.employee_code}</td>
-            <td class="cell-status" data-label="Durum">${statusHtml}</td>
-            <td class="cell-total-min" data-label="Bugünkü Toplam Mola (dk)">${totalMinutes}</td>
-            <td class="cell-quota" data-label="Mola Hakkı">${quotaBadge}</td>
-            <td class="cell-action" data-label="İşlem">${actionHtml}</td>
+            <td class="cell-status">${statusHtml}</td>
         </tr>`;
     }).join("");
 
-    document.querySelectorAll(".employee-name-link").forEach((btn) => {
-        btn.addEventListener("click", () => openHistoryModal(+btn.dataset.id, btn.dataset.name));
+    document.querySelectorAll(".employee-row").forEach((row) => {
+        row.addEventListener("click", () => openEmployeeDetailModal(row));
     });
-    document.querySelectorAll(".btn-add-break").forEach((btn) => {
-        btn.addEventListener("click", () => openBreakModal(+btn.dataset.id, btn.dataset.name));
-    });
-    document.querySelectorAll(".btn-end-break").forEach((btn) => {
-        btn.addEventListener("click", () => endEmployeeBreak(+btn.dataset.id));
-    });
-    document.querySelectorAll(".btn-delete").forEach((btn) => {
-        btn.addEventListener("click", () => deleteUser(+btn.dataset.id, btn.dataset.name));
-    });
+    
     startAdminCountdowns();
+}
+
+function openEmployeeDetailModal(row) {
+    const modal = document.getElementById("employee-detail-modal");
+    if (!modal) return;
+    
+    const empId = +row.dataset.employeeId;
+    const fullName = row.dataset.fullName;
+    const employeeCode = row.dataset.employeeCode;
+    const workStatus = row.dataset.workStatus;
+    const kullanilanMola = +row.dataset.kullanilanMola;
+    const molaHakkiLimit = +row.dataset.molaHakkiLimit;
+    const molaHakkiBitti = row.dataset.molaHakkiBitti === "true";
+    const canStartBreak = row.dataset.canStartBreak === "true";
+    const bugunkuToplamMola = +row.dataset.bugunkuToplamMola;
+    const remaining = +row.dataset.remaining;
+    
+    // Modal içeriğini doldur
+    document.getElementById("detail-name").textContent = fullName;
+    document.getElementById("detail-code").textContent = "@" + employeeCode;
+    
+    const statusEl = document.getElementById("detail-status");
+    const onBreak = workStatus === "molada";
+    statusEl.textContent = onBreak ? "Molada" : "Çalışıyor";
+    statusEl.className = "badge " + (onBreak ? "badge-break" : "badge-work");
+    
+    document.getElementById("detail-total-break").textContent = bugunkuToplamMola + " dk";
+    document.getElementById("detail-quota").textContent = kullanilanMola + " / " + molaHakkiLimit + " dk";
+    
+    // Butonları ayarla
+    const startBtn = document.getElementById("detail-start-break-btn");
+    const endBtn = document.getElementById("detail-end-break-btn");
+    const historyBtn = document.getElementById("detail-history-btn");
+    
+    if (onBreak) {
+        startBtn.hidden = true;
+        endBtn.hidden = false;
+        endBtn.onclick = () => {
+            endEmployeeBreak(empId);
+            modal.hidden = true;
+        };
+    } else if (molaHakkiBitti) {
+        startBtn.hidden = false;
+        startBtn.disabled = true;
+        startBtn.textContent = "Mola Hakkı Bitti";
+        startBtn.onclick = null;
+        endBtn.hidden = true;
+    } else if (canStartBreak) {
+        startBtn.hidden = false;
+        startBtn.disabled = false;
+        startBtn.textContent = "Mola Başlat";
+        startBtn.onclick = () => {
+            openBreakModal(empId, fullName);
+            modal.hidden = true;
+        };
+        endBtn.hidden = true;
+    } else {
+        startBtn.hidden = false;
+        startBtn.disabled = true;
+        startBtn.textContent = "Mola Başlatılamaz";
+        startBtn.onclick = null;
+        endBtn.hidden = true;
+    }
+    
+    historyBtn.onclick = () => {
+        openHistoryModal(empId, fullName);
+        modal.hidden = true;
+    };
+    
+    // Modal'ı aç
+    modal.hidden = false;
 }
 
 function startAdminCountdowns() {
@@ -864,6 +904,14 @@ function initAdminPage() {
     });
     document.getElementById("info-modal-cancel")?.addEventListener("click", () => {
         document.getElementById("info-modal").hidden = true;
+    });
+
+    // Employee detail modal event listeners
+    document.getElementById("employee-detail-modal-close")?.addEventListener("click", () => {
+        document.getElementById("employee-detail-modal").hidden = true;
+    });
+    document.getElementById("employee-detail-modal-cancel")?.addEventListener("click", () => {
+        document.getElementById("employee-detail-modal").hidden = true;
     });
 
     document.querySelectorAll(".modal-overlay").forEach((o) => {

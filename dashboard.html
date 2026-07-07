@@ -70,19 +70,15 @@
             </div>
 
             <div class="table-wrapper admin-table" id="employee-cards-wrapper">
-                <table class="employee-table" id="employee-table">
+                <table class="employee-table compact-table" id="employee-table">
                     <thead>
                         <tr>
                             <th>Ad Soyad</th>
-                            <th>Kullanıcı Adı</th>
                             <th>Durum</th>
-                            <th>Bugünkü Toplam Mola (dk)</th>
-                            <th>Mola Hakkı</th>
-                            <th>İşlem</th>
                         </tr>
                     </thead>
                     <tbody id="employee-tbody">
-                        <tr><td colspan="6" class="table-loading">Yükleniyor…</td></tr>
+                        <tr><td colspan="2" class="table-loading">Yükleniyor…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -280,6 +276,45 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-modal-cancel" id="info-modal-cancel">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personel Detay Modal -->
+    <div id="employee-detail-modal" class="modal-overlay" hidden>
+        <div class="modal admin-modal employee-detail-modal" role="dialog">
+            <div class="modal-header">
+                <h3>Personel Detayları</h3>
+                <button class="modal-close" id="employee-detail-modal-close" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="employee-detail-content">
+                    <div class="employee-detail-header">
+                        <h4 id="detail-name">—</h4>
+                        <span id="detail-code">@—</span>
+                        <span id="detail-status" class="badge">—</span>
+                    </div>
+                    
+                    <div class="employee-detail-stats">
+                        <div class="detail-stat">
+                            <span class="detail-stat-label">Bugünkü Toplam Mola</span>
+                            <span class="detail-stat-value" id="detail-total-break">— dk</span>
+                        </div>
+                        <div class="detail-stat">
+                            <span class="detail-stat-label">Mola Hakkı</span>
+                            <span class="detail-stat-value" id="detail-quota">— / 60 dk</span>
+                        </div>
+                    </div>
+                    
+                    <div class="employee-detail-actions">
+                        <button type="button" id="detail-start-break-btn" class="btn-modal-confirm">Mola Başlat</button>
+                        <button type="button" id="detail-end-break-btn" class="btn-modal-cancel" hidden>Mola Bitir</button>
+                        <button type="button" id="detail-history-btn" class="btn-modal-secondary">Geçmiş</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" id="employee-detail-modal-cancel">Kapat</button>
             </div>
         </div>
     </div>
