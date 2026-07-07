@@ -77,6 +77,8 @@ def init_db() -> None:
         "ALTER TABLE employees ADD COLUMN assigned_by VARCHAR(150)",
         "ALTER TABLE employees ADD COLUMN kullanilan_mola INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE employees ADD COLUMN mola_kota_tarihi DATE",
+        "ALTER TABLE employees ADD COLUMN vardiya_saati VARCHAR(10)",
+        "ALTER TABLE employees ADD COLUMN vardiya_gunu VARCHAR(20)",
     ]
     with engine.connect() as conn:
         for sql in migrations:
