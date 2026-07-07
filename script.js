@@ -36,7 +36,8 @@ function sleep(ms) {
 
 function isSuperAdmin(user) {
     return user?.is_super_admin === true
-        || (user?.employee_code || "").toUpperCase() === ADMIN_CODE;
+        || (user?.employee_code || "").toUpperCase() === ADMIN_CODE
+        || user?.role === "yonetici";
 }
 
 /** API hatalarını anlaşılır Türkçe mesaja çevirir */
@@ -387,6 +388,37 @@ function renderDashboardSummary() {
     if (exhaustedEl) exhaustedEl.textContent = dashboardSummary.mola_hakki_biten ?? 0;
 }
 
+async function loadStatistics() {
+    try {
+        const stats = await apiRequest("/dashboard/statistics");
+        renderStatistics(stats);
+    } catch (err) {
+        showToast("İstatistikler yüklenemedi: " + err.message, "error");
+    }
+}
+
+function renderStatistics(stats) {
+    const activeEl = document.getElementById("stat-active");
+    const breakEl = document.getElementById("stat-on-break");
+    const totalEl = document.getElementById("stat-24h-total");
+    const tbody = document.getElementById("statistics-tbody");
+    
+    if (activeEl) activeEl.textContent = stats.toplam_aktif_personel ?? 0;
+    if (breakEl) breakEl.textContent = stats.su_an_molada ?? 0;
+    if (totalEl) totalEl.textContent = stats.son_24_saat_toplam_mola_dk ?? 0;
+    
+    if (tbody && stats.personel_bazli_istatistikler) {
+        tbody.innerHTML = stats.personel_bazli_istatistikler.map(p => `
+            <tr>
+                <td>${p.full_name}</td>
+                <td>${p.employee_code}</td>
+                <td>${p.kullanilan_mola}</td>
+                <td>${p.is_on_break ? '<span class="badge badge-break">Molada</span>' : '<span class="badge badge-work">Çalışıyor</span>'}</td>
+            </tr>
+        `).join("");
+    }
+}
+
 function formatDateTime(iso) {
     if (!iso) return "—";
     const d = new Date(iso);
@@ -670,7 +702,12 @@ function initPanelTabs() {
             tab.classList.add("active");
             const panel = tab.dataset.panel;
             document.getElementById("panel-personel").hidden = panel !== "personel";
+            document.getElementById("panel-statistics").hidden = panel !== "statistics";
             document.getElementById("panel-users").hidden = panel !== "users";
+            
+            if (panel === "statistics") {
+                loadStatistics();
+            }
         });
     });
 }
@@ -811,6 +848,21 @@ function initAdminPage() {
     document.getElementById("add-modal-cancel")?.addEventListener("click", closeAddModal);
     document.getElementById("add-employee-form")?.addEventListener("submit", handleAddEmployee);
     document.getElementById("logout-btn")?.addEventListener("click", logout);
+
+    // Info modal event listeners
+    const infoBtn = document.getElementById("info-btn");
+    if (infoBtn && isSuperAdmin(user)) {
+        infoBtn.hidden = false;
+        infoBtn.addEventListener("click", () => {
+            document.getElementById("info-modal").hidden = false;
+        });
+    }
+    document.getElementById("info-modal-close")?.addEventListener("click", () => {
+        document.getElementById("info-modal").hidden = true;
+    });
+    document.getElementById("info-modal-cancel")?.addEventListener("click", () => {
+        document.getElementById("info-modal").hidden = true;
+    });
 
     document.querySelectorAll(".modal-overlay").forEach((o) => {
         o.addEventListener("click", (e) => { if (e.target === o) o.hidden = true; });

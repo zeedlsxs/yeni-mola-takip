@@ -149,6 +149,59 @@ def get_dashboard_summary(db: Session) -> DashboardSummary:
     )
 
 
+def get_dashboard_statistics(db: Session) -> DashboardStatistics:
+    """Yönetici paneli detaylı istatistiklerini döndürür."""
+    from datetime import datetime, timedelta
+    
+    stmt = (
+        select(Employee)
+        .where(Employee.is_active.is_(True))
+        .where(Employee.role == UserRole.PERSONEL)
+    )
+    employees = list(db.execute(stmt).scalars().all())
+    
+    on_break = 0
+    quota_exhausted = 0
+    personel_istatistikleri = []
+    
+    # Son 24 saat hesaplaması
+    twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
+    
+    for employee in employees:
+        if ensure_daily_quota(employee):
+            db.commit()
+        
+        if employee.is_on_break:
+            on_break += 1
+        elif employee.kullanilan_mola >= DAILY_BREAK_LIMIT:
+            quota_exhausted += 1
+        
+        # Personel bazlı istatistikler
+        personel_istatistikleri.append({
+            "id": employee.id,
+            "full_name": employee.full_name,
+            "employee_code": employee.employee_code,
+            "kullanilan_mola": employee.kullanilan_mola,
+            "is_on_break": employee.is_on_break,
+        })
+    
+    # Son 24 saatteki toplam mola süresi
+    stmt_breaks = (
+        select(Break)
+        .where(Break.start_time >= twenty_four_hours_ago)
+        .where(Break.status == BreakStatus.COMPLETED)
+    )
+    breaks = list(db.execute(stmt_breaks).scalars().all())
+    son_24_saat_toplam = sum(int((b.end_time - b.start_time).total_seconds() / 60) for b in breaks if b.end_time)
+    
+    return DashboardStatistics(
+        toplam_aktif_personel=len(employees),
+        su_an_molada=on_break,
+        son_24_saat_toplam_mola_dk=son_24_saat_toplam,
+        personel_bazli_istatistikler=personel_istatistikleri,
+    )
+
+
 def _history_date_range(period: str) -> tuple[date | None, date | None]:
     """Geçmiş filtre dönemine göre tarih aralığı döndürür."""
     today = _today_utc()
@@ -303,6 +356,8 @@ def authenticate_user(db: Session, login_in: UserLogin) -> Employee:
     'Eren' kullanıcısı sabit admin hesabıdır; doğru şifre ile
     otomatik yönetici yetkisi verilir.
 
+    Her login sırasında veritabanından güncel rolü getirir.
+
     Raises:
         InvalidCredentials: Kullanıcı bulunamazsa veya şifre yanlışsa.
     """
@@ -321,6 +376,9 @@ def authenticate_user(db: Session, login_in: UserLogin) -> Employee:
         raise InvalidCredentials()
     if not employee.password_hash or not verify_password(login_in.password, employee.password_hash):
         raise InvalidCredentials()
+    
+    # Veritabanından güncel rolü refresh et
+    db.refresh(employee)
     return employee
 
 

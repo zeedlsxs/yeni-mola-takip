@@ -30,6 +30,7 @@ from app.schemas import (
     BreakResponse,
     BreakStart,
     BreakWithEmployee,
+    DashboardStatistics,
     DashboardSummary,
     EmployeeCreate,
     EmployeeOverview,
@@ -223,6 +224,17 @@ def list_employees_overview(
 def get_dashboard_summary(db: DbSession) -> DashboardSummary:
     """Yönetici paneli özet kartları için anlık istatistikleri döndürür."""
     return crud.get_dashboard_summary(db)
+
+
+@app.get(
+    "/dashboard/statistics",
+    response_model=DashboardStatistics,
+    tags=["Dashboard"],
+    summary="Detaylı istatistikler",
+)
+def get_dashboard_statistics(db: DbSession) -> DashboardStatistics:
+    """Yönetici paneli detaylı istatistiklerini döndürür."""
+    return crud.get_dashboard_statistics(db)
 
 
 @app.get(

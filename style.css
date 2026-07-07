@@ -697,6 +697,16 @@ body {
     background: #0d9488;
 }
 
+.admin-header .btn-info {
+    background: #64748b;
+    font-size: 1.25rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.admin-header .btn-info:hover {
+    background: #475569;
+}
+
 .admin-header .btn-logout {
     border-color: rgba(255,255,255,0.25);
     color: rgba(255,255,255,0.7);
@@ -1719,6 +1729,130 @@ body {
     .header-actions .btn-logout {
         width: auto;
     }
+}
+
+/* ==========================================================================
+   İstatistikler Sekmesi
+   ========================================================================== */
+
+.statistics-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card--active {
+    border-color: var(--dash-blue);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+}
+
+.stat-card--break {
+    border-color: var(--dash-green);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent);
+}
+
+.stat-card--total {
+    border-color: var(--admin-accent);
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), transparent);
+}
+
+.stat-card-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat-card-unit {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+}
+
+.statistics-table-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+}
+
+.statistics-table-wrapper h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.statistics-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.statistics-table th,
+.statistics-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.statistics-table th {
+    background: var(--table-header-bg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.statistics-table tr:hover {
+    background: var(--table-hover-bg);
+}
+
+/* ==========================================================================
+   Info Modal Styles
+   ========================================================================== */
+
+.info-modal {
+    max-width: 600px;
+}
+
+.info-content h4 {
+    margin: 1.5rem 0 0.75rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.info-content h4:first-child {
+    margin-top: 0;
+}
+
+.info-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.info-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
 
 /* ==========================================================================

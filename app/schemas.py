@@ -346,6 +346,15 @@ class DashboardSummary(BaseModel):
     mola_hakki_biten: int = Field(description="Günlük mola hakkı biten personel sayısı")
 
 
+class DashboardStatistics(BaseModel):
+    """Yönetici paneli detaylı istatistikleri."""
+
+    toplam_aktif_personel: int = Field(description="Aktif personel sayısı")
+    su_an_molada: int = Field(description="Şu an molada olan personel sayısı")
+    son_24_saat_toplam_mola_dk: int = Field(description="Son 24 saatteki toplam mola süresi (dakika)")
+    personel_bazli_istatistikler: list[dict] = Field(description="Personel bazlı mola istatistikleri")
+
+
 class BreakHistoryItem(BaseModel):
     """Geçmiş mola kaydı."""
 
