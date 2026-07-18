@@ -18,6 +18,7 @@ REDIRECTS = """\
 /users/*             /.netlify/functions/api    200
 /breaks/*            /.netlify/functions/api    200
 /dashboard/summary   /.netlify/functions/api    200
+/upload-shift        /.netlify/functions/api    200
 
 # --- Uzantısız sayfa URL'leri ---
 /dashboard           /dashboard.html            200
