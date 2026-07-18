@@ -29,6 +29,7 @@ from app.schemas import (
     BreakHistoryItem,
     BreakHistoryResponse,
     BreakStart,
+    DashboardStatistics,
     DashboardSummary,
     EmployeeCreate,
     EmployeeOverview,
