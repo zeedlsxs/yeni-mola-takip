@@ -67,6 +67,24 @@
                 <p id="upload-status" class="upload-status"></p>
             </div>
 
+            <!-- Excel Yükleme Alanı -->
+            <div class="excel-upload-section">
+                <div class="upload-controls">
+                    <input type="file" id="excel-file" accept=".xlsx,.xls" class="file-input" hidden>
+                    <button type="button" id="upload-excel-btn" class="btn-upload-excel">📊 Excel Yükle</button>
+                    <select id="excel-day-select" class="day-select">
+                        <option value="Pazartesi">Pazartesi</option>
+                        <option value="Salı">Salı</option>
+                        <option value="Çarşamba">Çarşamba</option>
+                        <option value="Perşembe">Perşembe</option>
+                        <option value="Cuma">Cuma</option>
+                        <option value="Cumartesi">Cumartesi</option>
+                        <option value="Pazar">Pazar</option>
+                    </select>
+                </div>
+                <p id="excel-upload-status" class="upload-status"></p>
+            </div>
+
             <div class="table-wrapper admin-table" id="live-cards-wrapper">
                 <table class="employee-table compact-table" id="live-table">
                     <thead>

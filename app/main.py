@@ -11,7 +11,7 @@ from typing import Annotated
 
 import os
 
-from fastapi import Depends, FastAPI, Query, Request, status
+from fastapi import Depends, FastAPI, File, Query, Request, UploadFile, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -511,6 +511,82 @@ _frontend_dir = Path(__file__).resolve().parent.parent
 
 if _serve_frontend and (_frontend_dir / "index.html").is_file():
     app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
+
+
+@app.post(
+    "/upload-excel",
+    tags=["Vardiya"],
+    summary="Excel dosyasından vardiya yükle",
+)
+async def upload_excel(
+    file: UploadFile = File(..., description="Excel dosyası (.xlsx)"),
+    day: str = Query(..., description="Vardiya günü (Pazartesi-Pazar)"),
+    db: Session = Depends(get_db),
+):
+    """
+    Excel dosyasını okur, personel isimlerini ve saatlerini çıkarır.
+    Veritabanına vardiya bilgilerini günceller.
+    """
+    import pandas as pd
+    import io
+
+    # Dosya formatı kontrolü
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Sadece .xlsx veya .xls dosyaları kabul edilir"}
+        )
+
+    try:
+        # Excel dosyasını oku
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+
+        # Veri işleme
+        results = []
+        for index, row in df.iterrows():
+            # İlk sütun isim, ikinci sütun saat varsayımı
+            if len(row) >= 2:
+                name = str(row.iloc[0]).strip()
+                time = str(row.iloc[1]).strip()
+
+                if name and time:
+                    # Personeli bul ve güncelle
+                    employee = db.query(Employee).filter(
+                        Employee.full_name.ilike(f"%{name}%")
+                    ).first()
+
+                    if employee:
+                        employee.vardiya_saati = time
+                        employee.vardiya_gunu = day
+                        results.append({
+                            "name": name,
+                            "time": time,
+                            "status": "updated"
+                        })
+                    else:
+                        results.append({
+                            "name": name,
+                            "time": time,
+                            "status": "not_found"
+                        })
+
+        db.commit()
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"{len(results)} personel işlendi",
+                "results": results
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Dosya işleme hatası: {str(e)}"}
+        )
 
 
 @app.post(

@@ -1899,6 +1899,61 @@ body {
     border-color: var(--admin-accent);
 }
 
+/* ==========================================================================
+   Excel Yükleme Alanı
+   ========================================================================== */
+
+.excel-upload-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+}
+
+.btn-upload-excel {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-upload-excel:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+/* Mobil uyumlu stiller */
+@media (max-width: 768px) {
+    .upload-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-upload,
+    .btn-upload-excel {
+        padding: 1rem;
+        font-size: 1rem;
+        min-height: 48px;
+    }
+
+    .day-select {
+        padding: 1rem;
+        font-size: 1rem;
+        min-height: 48px;
+    }
+
+    .shift-upload-section,
+    .excel-upload-section {
+        padding: 1rem;
+    }
+}
+
 .upload-status {
     margin-top: 0.75rem;
     font-size: 0.9rem;

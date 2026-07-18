@@ -697,16 +697,57 @@ async function uploadShiftPhoto() {
         const serverResult = await response.json();
         statusEl.textContent = `${serverResult.updated_employees.length} personel güncellendi`;
         showToast("Vardiya bilgileri güncellendi", "success");
+    } catch (error) {
+        statusEl.textContent = "Hata: " + error.message;
+        showToast("Vardiya yüklenemedi: " + error.message, "error");
+    }
+    
+    loadLiveEmployees();
+}
+
+async function uploadExcelFile() {
+    const fileInput = document.getElementById("excel-file");
+    const daySelect = document.getElementById("excel-day-select");
+    const statusEl = document.getElementById("excel-upload-status");
+    
+    if (!fileInput.files[0]) {
+        showToast("Lütfen bir Excel dosyası seçin", "error");
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const day = daySelect.value;
+    
+    statusEl.textContent = "Dosya yükleniyor...";
+    
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
         
-        // Canlı listeyi yeniden yükle
+        const response = await fetch(`${API_BASE}/upload-excel?day=${encodeURIComponent(day)}`, {
+            method: "POST",
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Sunucu hatası");
+        }
+        
+        const result = await response.json();
+        statusEl.textContent = `${result.message}`;
+        showToast(result.message, "success");
+        
+        // Reload employee list
         loadLiveEmployees();
         
-        // Dosya input'unu temizle
-        fileInput.value = "";
-    } catch (err) {
-        statusEl.textContent = "Hata: " + err.message;
-        showToast("Yükleme başarısız: " + err.message, "error");
+    } catch (error) {
+        statusEl.textContent = "Hata: " + error.message;
+        showToast("Excel yüklenemedi: " + error.message, "error");
     }
+    
+    // Clear file input
+    fileInput.value = "";
 }
 
 async function loadLiveEmployees() {
@@ -957,6 +998,12 @@ function initAdminPage() {
         document.getElementById("shift-photo").click();
     });
     document.getElementById("shift-photo")?.addEventListener("change", uploadShiftPhoto);
+
+    // Excel yükleme event listener
+    document.getElementById("upload-excel-btn")?.addEventListener("click", () => {
+        document.getElementById("excel-file").click();
+    });
+    document.getElementById("excel-file")?.addEventListener("change", uploadExcelFile);
 
     // Info modal event listeners
     const infoBtn = document.getElementById("info-btn");
