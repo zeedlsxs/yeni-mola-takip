@@ -3,10 +3,11 @@
 # Yerel geliştirme:
 #   uvicorn app.main:app --reload
 #
-# Vercel (serverless):
-#   api/index.py → FastAPI handler
+# Netlify (serverless):
+#   netlify/functions/api.py → Mangum handler
 
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
+mangum>=0.19.0
 sqlalchemy>=2.0.36
 pydantic>=2.10.0
