@@ -509,17 +509,6 @@ def get_break(break_id: int, db: DbSession) -> BreakResponse:
 
 
 # ---------------------------------------------------------------------------
-# Frontend (PWA) — Statik Dosya Sunumu (yalnızca yerel / tek sunucu modunda)
-# ---------------------------------------------------------------------------
-
-_serve_frontend = os.getenv("SERVE_FRONTEND", "true").lower() in ("1", "true", "yes")
-_frontend_dir = Path(__file__).resolve().parent.parent
-
-if _serve_frontend and (_frontend_dir / "index.html").is_file():
-    app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
-
-
-# ---------------------------------------------------------------------------
 # Departman Endpoint'leri
 # ---------------------------------------------------------------------------
 
@@ -645,4 +634,15 @@ def get_active_employees_for_break_tracking_endpoint(date: date, db: DbSession):
         }
         for emp in employees
     ]
+
+
+# ---------------------------------------------------------------------------
+# Frontend (PWA) — Statik Dosya Sunumu (yalnızca yerel / tek sunucu modunda)
+# ---------------------------------------------------------------------------
+
+_serve_frontend = os.getenv("SERVE_FRONTEND", "true").lower() in ("1", "true", "yes")
+_frontend_dir = Path(__file__).resolve().parent.parent
+
+if _serve_frontend and (_frontend_dir / "index.html").is_file():
+    app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
 
