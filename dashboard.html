@@ -11,7 +11,6 @@
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <title>Yönetici Paneli — Mola Yönetim Sistemi</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body class="dashboard-page admin-page">
 
@@ -45,44 +44,61 @@
         <!-- Canlı Personel Listesi Sekmesi -->
         <section id="panel-live" class="panel-section">
             <div class="panel-toolbar">
-                <h2>Canlı Personel Listesi</h2>
+                <h2>Günlük Mola Takibi</h2>
                 <span id="live-count" class="employee-count"></span>
             </div>
 
-            <!-- Fotoğraf Yükleme Alanı -->
-            <div class="shift-upload-section">
-                <div class="upload-controls">
-                    <input type="file" id="shift-photo" accept="image/*" class="file-input" hidden>
-                    <button type="button" id="upload-photo-btn" class="btn-upload">📷 Fotoğraf Yükle</button>
-                    <select id="day-select" class="day-select">
-                        <option value="Pazartesi">Pazartesi</option>
-                        <option value="Salı">Salı</option>
-                        <option value="Çarşamba">Çarşamba</option>
-                        <option value="Perşembe">Perşembe</option>
-                        <option value="Cuma">Cuma</option>
-                        <option value="Cumartesi">Cumartesi</option>
-                        <option value="Pazar">Pazar</option>
-                    </select>
+            <!-- Departman ve Gün Seçimi -->
+            <div class="filter-section">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="department-select">Departman:</label>
+                        <select id="department-select" class="filter-select">
+                            <option value="">Departman Seçin</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="day-select">Gün:</label>
+                        <select id="day-select" class="filter-select">
+                            <option value="">Gün Seçin</option>
+                            <option value="Pazartesi">Pazartesi</option>
+                            <option value="Salı">Salı</option>
+                            <option value="Çarşamba">Çarşamba</option>
+                            <option value="Perşembe">Perşembe</option>
+                            <option value="Cuma">Cuma</option>
+                            <option value="Cumartesi">Cumartesi</option>
+                            <option value="Pazar">Pazar</option>
+                        </select>
+                    </div>
+                    <button type="button" id="filter-btn" class="btn-filter">Filtrele</button>
                 </div>
-                <p id="upload-status" class="upload-status"></p>
             </div>
 
-            <!-- Excel Yükleme Alanı -->
-            <div class="excel-upload-section">
-                <div class="upload-controls">
-                    <input type="file" id="excel-file" accept=".xlsx,.xls" class="file-input" hidden>
-                    <button type="button" id="upload-excel-btn" class="btn-upload-excel">📊 Excel Yükle</button>
-                    <select id="excel-day-select" class="day-select">
-                        <option value="Pazartesi">Pazartesi</option>
-                        <option value="Salı">Salı</option>
-                        <option value="Çarşamba">Çarşamba</option>
-                        <option value="Perşembe">Perşembe</option>
-                        <option value="Cuma">Cuma</option>
-                        <option value="Cumartesi">Cumartesi</option>
-                        <option value="Pazar">Pazar</option>
-                    </select>
+            <!-- Personel Ekleme Alanı -->
+            <div class="add-employee-section">
+                <div class="add-employee-controls">
+                    <button type="button" id="add-employee-btn" class="btn-add-employee">+ Personel Ekle</button>
                 </div>
-                <p id="excel-upload-status" class="upload-status"></p>
+                <p id="add-employee-status" class="upload-status"></p>
+            </div>
+
+            <!-- Personel Seçim Modalı -->
+            <div id="employee-select-modal" class="modal" hidden>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Personel Seç</h3>
+                        <button type="button" class="modal-close" id="employee-select-close">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="employee-select-list" class="employee-select-list">
+                            <p class="loading-text">Yükleniyor...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="employee-select-confirm" class="btn-primary">Ekle</button>
+                        <button type="button" id="employee-select-cancel" class="btn-secondary">İptal</button>
+                    </div>
+                </div>
             </div>
 
             <div class="table-wrapper admin-table" id="live-cards-wrapper">

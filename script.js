@@ -650,104 +650,189 @@ function initPanelTabs() {
     });
 }
 
-async function uploadShiftPhoto() {
-    const fileInput = document.getElementById("shift-photo");
-    const daySelect = document.getElementById("day-select");
-    const statusEl = document.getElementById("upload-status");
-    
-    if (!fileInput.files[0]) {
-        showToast("Lütfen bir fotoğraf seçin", "error");
-        return;
-    }
-    
-    const file = fileInput.files[0];
-    const day = daySelect.value;
-    
-    statusEl.textContent = "OCR işleniyor...";
-    
+// Departman ve gün seçimi için global değişkenler
+let selectedDepartmentId = null;
+let selectedDay = null;
+let selectedEmployees = [];
+
+// Departmanları yükle
+async function loadDepartments() {
     try {
-        // Client-side OCR with Tesseract.js
-        const result = await Tesseract.recognize(file, 'tur+eng', {
-            logger: m => {
-                if (m.status === 'recognizing text') {
-                    statusEl.textContent = `OCR işleniyor... %${Math.round(m.progress * 100)}`;
-                }
-            }
+        const response = await apiRequest("/departments");
+        const departmentSelect = document.getElementById("department-select");
+        
+        departmentSelect.innerHTML = '<option value="">Departman Seçin</option>';
+        
+        response.forEach(dept => {
+            const option = document.createElement("option");
+            option.value = dept.id;
+            option.textContent = dept.name;
+            departmentSelect.appendChild(option);
         });
-        
-        const detectedTexts = result.data.text.split('\n').filter(t => t.trim());
-        
-        statusEl.textContent = "Sunucuya gönderiliyor...";
-        
-        // Send OCR results to server
-        const response = await fetch(`${API_BASE}/upload-shift?day=${encodeURIComponent(day)}`, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                texts: detectedTexts
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error("Sunucu hatası");
-        }
-        
-        const serverResult = await response.json();
-        statusEl.textContent = `${serverResult.updated_employees.length} personel güncellendi`;
-        showToast("Vardiya bilgileri güncellendi", "success");
     } catch (error) {
-        statusEl.textContent = "Hata: " + error.message;
-        showToast("Vardiya yüklenemedi: " + error.message, "error");
+        showToast("Departmanlar yüklenemedi: " + error.message, "error");
     }
-    
-    loadLiveEmployees();
 }
 
-async function uploadExcelFile() {
-    const fileInput = document.getElementById("excel-file");
-    const daySelect = document.getElementById("excel-day-select");
-    const statusEl = document.getElementById("excel-upload-status");
+// Filtrele butonu
+async function filterEmployees() {
+    const departmentSelect = document.getElementById("department-select");
+    const daySelect = document.getElementById("day-select");
     
-    if (!fileInput.files[0]) {
-        showToast("Lütfen bir Excel dosyası seçin", "error");
+    selectedDepartmentId = departmentSelect.value;
+    selectedDay = daySelect.value;
+    
+    if (!selectedDepartmentId || !selectedDay) {
+        showToast("Lütfen departman ve gün seçin", "error");
         return;
     }
     
-    const file = fileInput.files[0];
-    const day = daySelect.value;
-    
-    statusEl.textContent = "Dosya yükleniyor...";
-    
     try {
-        const formData = new FormData();
-        formData.append('file', file);
+        const response = await apiRequest(`/departments/${selectedDepartmentId}/employees/${selectedDay}`);
+        const tbody = document.getElementById("live-tbody");
         
-        const response = await fetch(`${API_BASE}/upload-excel?day=${encodeURIComponent(day)}`, {
-            method: "POST",
-            body: formData
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Sunucu hatası");
+        if (response.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="table-empty">Bu departmanda bu gün çalışan personel yok.</td></tr>`;
+        } else {
+            tbody.innerHTML = response.map(emp => `
+                <tr>
+                    <td>${emp.full_name}</td>
+                    <td>-</td>
+                    <td><span class="badge badge-work">Çalışıyor</span></td>
+                    <td>
+                        <button class="btn-start-break" data-employee-id="${emp.id}">Mola Başlat</button>
+                    </td>
+                </tr>
+            `).join("");
         }
         
-        const result = await response.json();
-        statusEl.textContent = `${result.message}`;
-        showToast(result.message, "success");
+        document.getElementById("live-count").textContent = response.length;
+    } catch (error) {
+        showToast("Personeller yüklenemedi: " + error.message, "error");
+    }
+}
+
+// Personel seçim modalını aç
+async function openEmployeeSelectModal() {
+    if (!selectedDepartmentId || !selectedDay) {
+        showToast("Lütfen önce departman ve gün seçin", "error");
+        return;
+    }
+    
+    const modal = document.getElementById("employee-select-modal");
+    const list = document.getElementById("employee-select-list");
+    
+    modal.hidden = false;
+    list.innerHTML = '<p class="loading-text">Yükleniyor...</p>';
+    selectedEmployees = [];
+    
+    try {
+        const response = await apiRequest(`/departments/${selectedDepartmentId}/employees/${selectedDay}`);
         
-        // Reload employee list
-        loadLiveEmployees();
+        if (response.length === 0) {
+            list.innerHTML = '<p class="table-empty">Seçilebilir personel yok.</p>';
+            return;
+        }
+        
+        list.innerHTML = response.map(emp => `
+            <div class="employee-select-item" data-employee-id="${emp.id}">
+                <input type="checkbox" id="emp-${emp.id}" value="${emp.id}">
+                <label for="emp-${emp.id}" class="employee-name">${emp.full_name}</label>
+                <span class="employee-time">-</span>
+            </div>
+        `).join("");
+        
+        // Event listener'ları ekle
+        list.querySelectorAll(".employee-select-item").forEach(item => {
+            item.addEventListener("click", (e) => {
+                if (e.target.type !== "checkbox") {
+                    const checkbox = item.querySelector("input[type='checkbox']");
+                    checkbox.checked = !checkbox.checked;
+                }
+                item.classList.toggle("selected", item.querySelector("input[type='checkbox']").checked);
+            });
+        });
+        
+    } catch (error) {
+        list.innerHTML = `<p class="error-message">Hata: ${error.message}</p>`;
+    }
+}
+
+// Personel seçim modalını kapat
+function closeEmployeeSelectModal() {
+    document.getElementById("employee-select-modal").hidden = true;
+}
+
+// Seçilen personelleri günlük aktif listeye ekle
+async function addSelectedEmployees() {
+    const checkboxes = document.querySelectorAll("#employee-select-list input[type='checkbox']:checked");
+    const employeeIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (employeeIds.length === 0) {
+        showToast("Lütfen en az bir personel seçin", "error");
+        return;
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    const statusEl = document.getElementById("add-employee-status");
+    
+    statusEl.textContent = "Personeller ekleniyor...";
+    
+    try {
+        let addedCount = 0;
+        for (const employeeId of employeeIds) {
+            await apiRequest("/daily-active-employees", {
+                method: "POST",
+                body: JSON.stringify({
+                    employee_id: employeeId,
+                    date: today
+                })
+            });
+            addedCount++;
+        }
+        
+        statusEl.textContent = `${addedCount} personel eklendi`;
+        showToast(`${addedCount} personel günlük listeye eklendi`, "success");
+        
+        closeEmployeeSelectModal();
+        loadActiveEmployeesForBreakTracking();
         
     } catch (error) {
         statusEl.textContent = "Hata: " + error.message;
-        showToast("Excel yüklenemedi: " + error.message, "error");
+        showToast("Personeller eklenemedi: " + error.message, "error");
     }
+}
+
+// Mola takibi için aktif personelleri yükle
+async function loadActiveEmployeesForBreakTracking() {
+    const today = new Date().toISOString().split('T')[0];
     
-    // Clear file input
-    fileInput.value = "";
+    try {
+        const response = await apiRequest(`/active-employees-for-break-tracking?date=${today}`);
+        const tbody = document.getElementById("live-tbody");
+        
+        if (response.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="table-empty">Bugün için aktif personel yok. Personel ekleyin.</td></tr>`;
+        } else {
+            tbody.innerHTML = response.map(emp => `
+                <tr>
+                    <td>${emp.full_name}</td>
+                    <td>-</td>
+                    <td>${emp.is_on_break ? '<span class="badge badge-break">Molada</span>' : '<span class="badge badge-work">Çalışıyor</span>'}</td>
+                    <td>
+                        ${emp.is_on_break 
+                            ? `<button class="btn-end-break" data-employee-id="${emp.id}">Mola Bitir</button>`
+                            : `<button class="btn-start-break" data-employee-id="${emp.id}">Mola Başlat</button>`
+                        }
+                    </td>
+                </tr>
+            `).join("");
+        }
+        
+        document.getElementById("live-count").textContent = response.length;
+    } catch (error) {
+        showToast("Aktif personeller yüklenemedi: " + error.message, "error");
+    }
 }
 
 async function loadLiveEmployees() {
@@ -952,6 +1037,8 @@ function initAdminPage() {
     if (!requireAdmin()) return;
 
     initTheme();
+    loadDepartments();
+    loadActiveEmployeesForBreakTracking();
 
     const user = getUser();
     const greeting = document.getElementById("user-greeting");
@@ -987,23 +1074,19 @@ function initAdminPage() {
         document.querySelectorAll(".duration-btn").forEach((b) => b.classList.remove("active"));
     });
 
-    document.getElementById("add-employee-btn")?.addEventListener("click", openAddModal);
     document.getElementById("add-modal-close")?.addEventListener("click", closeAddModal);
     document.getElementById("add-modal-cancel")?.addEventListener("click", closeAddModal);
     document.getElementById("add-employee-form")?.addEventListener("submit", handleAddEmployee);
     document.getElementById("logout-btn")?.addEventListener("click", logout);
 
-    // Fotoğraf yükleme event listener
-    document.getElementById("upload-photo-btn")?.addEventListener("click", () => {
-        document.getElementById("shift-photo").click();
-    });
-    document.getElementById("shift-photo")?.addEventListener("change", uploadShiftPhoto);
+    // Departman ve gün filtreleme event listener'ları
+    document.getElementById("filter-btn")?.addEventListener("click", filterEmployees);
 
-    // Excel yükleme event listener
-    document.getElementById("upload-excel-btn")?.addEventListener("click", () => {
-        document.getElementById("excel-file").click();
-    });
-    document.getElementById("excel-file")?.addEventListener("change", uploadExcelFile);
+    // Personel ekleme event listener'ları (günlük liste için)
+    document.getElementById("add-employee-btn")?.addEventListener("click", openEmployeeSelectModal);
+    document.getElementById("employee-select-close")?.addEventListener("click", closeEmployeeSelectModal);
+    document.getElementById("employee-select-cancel")?.addEventListener("click", closeEmployeeSelectModal);
+    document.getElementById("employee-select-confirm")?.addEventListener("click", addSelectedEmployees);
 
     // Info modal event listeners
     const infoBtn = document.getElementById("info-btn");

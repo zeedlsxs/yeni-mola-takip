@@ -32,6 +32,10 @@ from app.schemas import (
     BreakWithEmployee,
     DashboardStatistics,
     DashboardSummary,
+    DailyActiveEmployeeCreate,
+    DailyActiveEmployeeResponse,
+    DepartmentCreate,
+    DepartmentResponse,
     EmployeeCreate,
     EmployeeOverview,
     EmployeeResponse,
@@ -40,6 +44,8 @@ from app.schemas import (
     EmployeeUpdate,
     HealthResponse,
     MessageResponse,
+    ShiftScheduleCreate,
+    ShiftScheduleResponse,
     UserLogin,
     UserManageItem,
     UserRegister,
@@ -513,133 +519,131 @@ if _serve_frontend and (_frontend_dir / "index.html").is_file():
     app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
 
 
-@app.post(
-    "/upload-excel",
-    tags=["Vardiya"],
-    summary="Excel dosyasından vardiya yükle",
-)
-async def upload_excel(
-    file: UploadFile = File(..., description="Excel dosyası (.xlsx)"),
-    day: str = Query(..., description="Vardiya günü (Pazartesi-Pazar)"),
-    db: Session = Depends(get_db),
+# ---------------------------------------------------------------------------
+# Departman Endpoint'leri
+# ---------------------------------------------------------------------------
+
+
+@app.get("/departments", tags=["Departman"], response_model=list[DepartmentResponse])
+def get_departments_endpoint(db: DbSession):
+    """Tüm aktif departmanları getirir."""
+    return crud.get_departments(db)
+
+
+@app.post("/departments", tags=["Departman"], response_model=DepartmentResponse)
+def create_department_endpoint(department_in: DepartmentCreate, db: DbSession):
+    """Yeni departman oluşturur."""
+    return crud.create_department(db, department_in)
+
+
+@app.put("/departments/{department_id}", tags=["Departman"], response_model=DepartmentResponse)
+def update_department_endpoint(
+    department_id: int, department_in: DepartmentCreate, db: DbSession
 ):
-    """
-    Excel dosyasını okur, personel isimlerini ve saatlerini çıkarır.
-    Veritabanına vardiya bilgilerini günceller.
-    """
-    import pandas as pd
-    import io
-
-    # Dosya formatı kontrolü
-    if not file.filename.endswith(('.xlsx', '.xls')):
-        return JSONResponse(
-            status_code=400,
-            content={"error": "Sadece .xlsx veya .xls dosyaları kabul edilir"}
-        )
-
-    try:
-        # Excel dosyasını oku
-        contents = await file.read()
-        df = pd.read_excel(io.BytesIO(contents))
-
-        # Veri işleme
-        results = []
-        for index, row in df.iterrows():
-            # İlk sütun isim, ikinci sütun saat varsayımı
-            if len(row) >= 2:
-                name = str(row.iloc[0]).strip()
-                time = str(row.iloc[1]).strip()
-
-                if name and time:
-                    # Personeli bul ve güncelle
-                    employee = db.query(Employee).filter(
-                        Employee.full_name.ilike(f"%{name}%")
-                    ).first()
-
-                    if employee:
-                        employee.vardiya_saati = time
-                        employee.vardiya_gunu = day
-                        results.append({
-                            "name": name,
-                            "time": time,
-                            "status": "updated"
-                        })
-                    else:
-                        results.append({
-                            "name": name,
-                            "time": time,
-                            "status": "not_found"
-                        })
-
-        db.commit()
-
-        return JSONResponse(
-            status_code=200,
-            content={
-                "success": True,
-                "message": f"{len(results)} personel işlendi",
-                "results": results
-            }
-        )
-
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Dosya işleme hatası: {str(e)}"}
-        )
+    """Departman günceller."""
+    return crud.update_department(db, department_id, department_in)
 
 
-@app.post(
-    "/upload-shift",
-    tags=["Vardiya"],
-    summary="Fotoğraftan vardiya yükle (Client-side OCR)",
-)
-async def upload_shift(
-    ocr_data: dict,
-    day: str = Query(..., description="Vardiya günü (Pazartesi-Pazar)"),
-    db: Session = Depends(get_db),
+@app.delete("/departments/{department_id}", tags=["Departman"])
+def delete_department_endpoint(department_id: int, db: DbSession):
+    """Departman siler."""
+    crud.delete_department(db, department_id)
+    return {"message": "Departman silindi"}
+
+
+# ---------------------------------------------------------------------------
+# Vardiya Programı Endpoint'leri
+# ---------------------------------------------------------------------------
+
+
+@app.get("/shift-schedules", tags=["Vardiya Programı"], response_model=list[ShiftScheduleResponse])
+def get_shift_schedules_endpoint(employee_id: int | None = None, db: DbSession = Depends(get_db)):
+    """Vardiya programlarını getirir."""
+    return crud.get_shift_schedules(db, employee_id)
+
+
+@app.post("/shift-schedules", tags=["Vardiya Programı"], response_model=ShiftScheduleResponse)
+def create_shift_schedule_endpoint(schedule_in: ShiftScheduleCreate, db: DbSession):
+    """Yeni vardiya programı oluşturur."""
+    return crud.create_shift_schedule(db, schedule_in)
+
+
+@app.put("/shift-schedules/{schedule_id}", tags=["Vardiya Programı"], response_model=ShiftScheduleResponse)
+def update_shift_schedule_endpoint(
+    schedule_id: int, schedule_in: ShiftScheduleCreate, db: DbSession
 ):
-    """
-    Client-side Tesseract.js'den gelen metin verisini işleyip personel isimlerini ve saatlerini çıkarır.
-    Veritabanına vardiya bilgilerini günceller.
-    """
-    detected_texts = ocr_data.get("texts", [])
-    
-    # Personel isimlerini ve saatlerini çıkarma
-    detected_data = []
-    for text in detected_texts:
-        # Saat formatı kontrolü (örn: 07:30)
-        if ':' in text and len(text) <= 5:
-            detected_data.append({'type': 'time', 'value': text})
-        # İsim kontrolü (basit)
-        elif len(text.split()) >= 2 and text.replace(' ', '').isalpha():
-            detected_data.append({'type': 'name', 'value': text})
-    
-    # Veritabanını güncelle
-    updated_employees = []
-    for data in detected_data:
-        if data['type'] == 'name':
-            # Personel adına göre bul
-            employee = db.query(Employee).filter(
-                Employee.full_name.ilike(f"%{data['value']}%")
-            ).first()
-            if employee:
-                employee.vardiya_gunu = day
-                # İsimden sonraki saat bilgisini bul
-                idx = detected_data.index(data)
-                if idx + 1 < len(detected_data) and detected_data[idx + 1]['type'] == 'time':
-                    employee.vardiya_saati = detected_data[idx + 1]['value']
-                updated_employees.append({
-                    'id': employee.id,
-                    'full_name': employee.full_name,
-                    'vardiya_saati': employee.vardiya_saati,
-                    'vardiya_gunu': employee.vardiya_gunu
-                })
-    
-    db.commit()
-    
-    return {
-        "message": "Vardiya bilgileri güncellendi",
-        "detected_count": len(detected_texts),
-        "updated_employees": updated_employees
-    }
+    """Vardiya programını günceller."""
+    return crud.update_shift_schedule(db, schedule_id, schedule_in)
+
+
+@app.delete("/shift-schedules/{schedule_id}", tags=["Vardiya Programı"])
+def delete_shift_schedule_endpoint(schedule_id: int, db: DbSession):
+    """Vardiya programını siler."""
+    crud.delete_shift_schedule(db, schedule_id)
+    return {"message": "Vardiya programı silindi"}
+
+
+@app.get("/departments/{department_id}/employees/{day}", tags=["Departman"])
+def get_employees_by_department_and_day_endpoint(
+    department_id: int, day: str, db: DbSession
+):
+    """Departman ve güne göre personelleri getirir."""
+    employees = crud.get_employees_by_department_and_day(db, department_id, day)
+    return [
+        {
+            "id": emp.id,
+            "employee_code": emp.employee_code,
+            "full_name": emp.full_name,
+            "department": emp.department,
+        }
+        for emp in employees
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Günlük Aktif Personel Listesi Endpoint'leri
+# ---------------------------------------------------------------------------
+
+
+@app.get("/daily-active-employees", tags=["Günlük Aktif Personel"], response_model=list[DailyActiveEmployeeResponse])
+def get_daily_active_employees_endpoint(date: date, db: DbSession):
+    """Belirli bir tarih için aktif personelleri getirir."""
+    return crud.get_daily_active_employees(db, date)
+
+
+@app.post("/daily-active-employees", tags=["Günlük Aktif Personel"], response_model=DailyActiveEmployeeResponse)
+def create_daily_active_employee_endpoint(
+    daily_in: DailyActiveEmployeeCreate,
+    db: DbSession,
+    current_user: dict = Depends(get_current_user),
+):
+    """Günlük aktif personel ekler."""
+    return crud.create_daily_active_employee(db, daily_in, current_user["username"])
+
+
+@app.delete("/daily-active-employees/{employee_id}", tags=["Günlük Aktif Personel"])
+def delete_daily_active_employee_endpoint(
+    employee_id: int, date: date, db: DbSession
+):
+    """Günlük aktif personeli siler."""
+    crud.delete_daily_active_employee(db, employee_id, date)
+    return {"message": "Personel aktif listeden kaldırıldı"}
+
+
+@app.get("/active-employees-for-break-tracking", tags=["Mola Takibi"])
+def get_active_employees_for_break_tracking_endpoint(date: date, db: DbSession):
+    """Mola takibi için aktif personelleri getirir."""
+    employees = crud.get_active_employees_for_break_tracking(db, date)
+    return [
+        {
+            "id": emp.id,
+            "employee_code": emp.employee_code,
+            "full_name": emp.full_name,
+            "is_on_break": emp.is_on_break,
+            "break_start_time": emp.break_start_time,
+            "break_duration_minutes": emp.break_duration_minutes,
+            "kullanilan_mola": emp.kullanilan_mola,
+        }
+        for emp in employees
+    ]
+

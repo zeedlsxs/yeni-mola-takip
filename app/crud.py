@@ -22,7 +22,17 @@ from app.exceptions import (
     NoActiveBreak,
     ReservedUsername,
 )
-from app.models import Break, BreakHistory, BreakStatus, BreakType, Employee, UserRole
+from app.models import (
+    Break,
+    BreakHistory,
+    BreakStatus,
+    BreakType,
+    DailyActiveEmployee,
+    Department,
+    Employee,
+    ShiftSchedule,
+    UserRole,
+)
 from app.schemas import (
     ActiveBreakSummary,
     BreakEnd,
@@ -31,11 +41,17 @@ from app.schemas import (
     BreakStart,
     DashboardStatistics,
     DashboardSummary,
+    DailyActiveEmployeeCreate,
+    DailyActiveEmployeeResponse,
+    DepartmentCreate,
+    DepartmentResponse,
     EmployeeCreate,
     EmployeeOverview,
     EmployeeStatusResponse,
     EmployeeStatusUpdate,
     EmployeeUpdate,
+    ShiftScheduleCreate,
+    ShiftScheduleResponse,
     UserLogin,
     UserRegister,
 )
@@ -797,11 +813,201 @@ def end_break(
     employee.is_on_break = False
     employee.break_start_time = None
     employee.break_duration_minutes = None
-    employee.assigned_by = None
-    increment_break_usage(employee)
+
+
+# ---------------------------------------------------------------------------
+# Departman CRUD İşlemleri
+# ---------------------------------------------------------------------------
+
+
+def get_departments(db: Session) -> list[Department]:
+    """Tüm aktif departmanları getirir."""
+    return db.query(Department).filter(Department.is_active == True).all()
+
+
+def get_department_by_id(db: Session, department_id: int) -> Department | None:
+    """ID'ye göre departman getirir."""
+    return db.query(Department).filter(Department.id == department_id).first()
+
+
+def create_department(db: Session, department_in: DepartmentCreate) -> Department:
+    """Yeni departman oluşturur."""
+    department = Department(
+        name=department_in.name,
+        description=department_in.description,
+    )
+    db.add(department)
     db.commit()
-    db.refresh(active_break)
-    return active_break
+    db.refresh(department)
+    return department
+
+
+def update_department(
+    db: Session, department_id: int, department_in: DepartmentCreate
+) -> Department:
+    """Departman günceller."""
+    department = get_department_by_id(db, department_id)
+    if not department:
+        raise Exception(f"Departman bulunamadı: {department_id}")
+    
+    department.name = department_in.name
+    department.description = department_in.description
+    db.commit()
+    db.refresh(department)
+    return department
+
+
+def delete_department(db: Session, department_id: int) -> bool:
+    """Departman siler (soft delete)."""
+    department = get_department_by_id(db, department_id)
+    if not department:
+        return False
+    
+    department.is_active = False
+    db.commit()
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Vardiya Programı CRUD İşlemleri
+# ---------------------------------------------------------------------------
+
+
+def get_shift_schedules(db: Session, employee_id: int | None = None) -> list[ShiftSchedule]:
+    """Vardiya programlarını getirir."""
+    query = db.query(ShiftSchedule)
+    if employee_id:
+        query = query.filter(ShiftSchedule.employee_id == employee_id)
+    return query.all()
+
+
+def get_shift_schedule_by_id(db: Session, schedule_id: int) -> ShiftSchedule | None:
+    """ID'ye göre vardiya programı getirir."""
+    return db.query(ShiftSchedule).filter(ShiftSchedule.id == schedule_id).first()
+
+
+def create_shift_schedule(db: Session, schedule_in: ShiftScheduleCreate) -> ShiftSchedule:
+    """Yeni vardiya programı oluşturur."""
+    schedule = ShiftSchedule(
+        employee_id=schedule_in.employee_id,
+        day=schedule_in.day,
+        shift_time=schedule_in.shift_time,
+    )
+    db.add(schedule)
+    db.commit()
+    db.refresh(schedule)
+    return schedule
+
+
+def update_shift_schedule(
+    db: Session, schedule_id: int, schedule_in: ShiftScheduleCreate
+) -> ShiftSchedule:
+    """Vardiya programını günceller."""
+    schedule = get_shift_schedule_by_id(db, schedule_id)
+    if not schedule:
+        raise Exception(f"Vardiya programı bulunamadı: {schedule_id}")
+    
+    schedule.employee_id = schedule_in.employee_id
+    schedule.day = schedule_in.day
+    schedule.shift_time = schedule_in.shift_time
+    db.commit()
+    db.refresh(schedule)
+    return schedule
+
+
+def delete_shift_schedule(db: Session, schedule_id: int) -> bool:
+    """Vardiya programını siler."""
+    schedule = get_shift_schedule_by_id(db, schedule_id)
+    if not schedule:
+        return False
+    
+    db.delete(schedule)
+    db.commit()
+    return True
+
+
+def get_employees_by_department_and_day(
+    db: Session, department_id: int, day: str
+) -> list[Employee]:
+    """Departman ve güne göre personelleri getirir."""
+    return (
+        db.query(Employee)
+        .join(ShiftSchedule, Employee.id == ShiftSchedule.employee_id)
+        .filter(
+            Employee.department_id == department_id,
+            ShiftSchedule.day == day,
+            Employee.is_active == True,
+        )
+        .all()
+    )
+
+
+# ---------------------------------------------------------------------------
+# Günlük Aktif Personel Listesi CRUD İşlemleri
+# ---------------------------------------------------------------------------
+
+
+def get_daily_active_employees(db: Session, date: date) -> list[DailyActiveEmployee]:
+    """Belirli bir tarih için aktif personelleri getirir."""
+    return (
+        db.query(DailyActiveEmployee)
+        .filter(DailyActiveEmployee.date == date)
+        .all()
+    )
+
+
+def get_daily_active_employee_by_employee_and_date(
+    db: Session, employee_id: int, date: date
+) -> DailyActiveEmployee | None:
+    """Personel ve tarihe göre aktif personel kaydını getirir."""
+    return (
+        db.query(DailyActiveEmployee)
+        .filter(
+            DailyActiveEmployee.employee_id == employee_id,
+            DailyActiveEmployee.date == date,
+        )
+        .first()
+    )
+
+
+def create_daily_active_employee(
+    db: Session, daily_in: DailyActiveEmployeeCreate, added_by: str
+) -> DailyActiveEmployee:
+    """Günlük aktif personel ekler."""
+    daily = DailyActiveEmployee(
+        employee_id=daily_in.employee_id,
+        date=daily_in.date,
+        added_by=added_by,
+    )
+    db.add(daily)
+    db.commit()
+    db.refresh(daily)
+    return daily
+
+
+def delete_daily_active_employee(
+    db: Session, employee_id: int, date: date
+) -> bool:
+    """Günlük aktif personeli siler."""
+    daily = get_daily_active_employee_by_employee_and_date(db, employee_id, date)
+    if not daily:
+        return False
+    
+    db.delete(daily)
+    db.commit()
+    return True
+
+
+def get_active_employees_for_break_tracking(db: Session, date: date) -> list[Employee]:
+    """Mola takibi için aktif personelleri getirir (detaylı)."""
+    daily_records = get_daily_active_employees(db, date)
+    employee_ids = [d.employee_id for d in daily_records]
+    
+    return (
+        db.query(Employee)
+        .filter(Employee.id.in_(employee_ids))
+        .all()
+    )
 
 
 def get_break_or_raise(db: Session, break_id: int) -> Break:

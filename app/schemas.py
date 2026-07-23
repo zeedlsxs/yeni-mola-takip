@@ -377,4 +377,76 @@ class BreakHistoryResponse(BaseModel):
     period: str
     total_records: int
     total_duration_minutes: float
-    records: list[BreakHistoryItem]
+
+
+# ---------------------------------------------------------------------------
+# Departman Şemaları
+# ---------------------------------------------------------------------------
+
+
+class DepartmentCreate(BaseModel):
+    """Departman oluşturma isteği."""
+
+    name: str = Field(..., min_length=1, max_length=100, description="Departman adı")
+    description: str | None = Field(None, max_length=255, description="Departman açıklaması")
+
+
+class DepartmentResponse(BaseModel):
+    """Departman yanıtı."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    description: str | None
+    is_active: bool
+    created_at: datetime
+
+
+# ---------------------------------------------------------------------------
+# Vardiya Programı Şemaları
+# ---------------------------------------------------------------------------
+
+
+class ShiftScheduleCreate(BaseModel):
+    """Vardiya programı oluşturma isteği."""
+
+    employee_id: int = Field(..., description="Personel ID")
+    day: str = Field(..., description="Gün (Pazartesi-Pazar)")
+    shift_time: str = Field(..., description="Vardiya saati (örn: 07:30)")
+
+
+class ShiftScheduleResponse(BaseModel):
+    """Vardiya programı yanıtı."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    employee_id: int
+    day: str
+    shift_time: str
+    created_at: datetime
+
+
+# ---------------------------------------------------------------------------
+# Günlük Aktif Personel Listesi Şemaları
+# ---------------------------------------------------------------------------
+
+
+class DailyActiveEmployeeCreate(BaseModel):
+    """Günlük aktif personel ekleme isteği."""
+
+    employee_id: int = Field(..., description="Personel ID")
+    date: date = Field(..., description="Tarih")
+
+
+class DailyActiveEmployeeResponse(BaseModel):
+    """Günlük aktif personel yanıtı."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    employee_id: int
+    date: date
+    added_by: str | None
+    created_at: datetime

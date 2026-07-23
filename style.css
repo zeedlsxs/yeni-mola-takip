@@ -1850,10 +1850,10 @@ body {
 }
 
 /* ==========================================================================
-   Fotoğraf Yükleme Alanı
+   Filtre Bölümü
    ========================================================================== */
 
-.shift-upload-section {
+.filter-section {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
@@ -1861,14 +1861,45 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.upload-controls {
+.filter-controls {
     display: flex;
     gap: 1rem;
-    align-items: center;
+    align-items: flex-end;
     flex-wrap: wrap;
 }
 
-.btn-upload {
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.btn-filter {
     background: var(--admin-accent);
     color: #fff;
     border: none;
@@ -1877,42 +1908,33 @@ body {
     font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-height: 48px;
 }
 
-.btn-upload:hover {
+.btn-filter:hover {
     background: #14b8a6;
     transform: translateY(-1px);
 }
 
-.day-select {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    background: var(--card-bg);
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    cursor: pointer;
-}
-
-.day-select:focus {
-    outline: none;
-    border-color: var(--admin-accent);
-}
-
 /* ==========================================================================
-   Excel Yükleme Alanı
+   Personel Ekleme Bölümü
    ========================================================================== */
 
-.excel-upload-section {
+.add-employee-section {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    margin-top: 1rem;
 }
 
-.btn-upload-excel {
+.add-employee-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-add-employee {
     background: #10b981;
     color: #fff;
     border: none;
@@ -1921,43 +1943,173 @@ body {
     font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-height: 48px;
 }
 
-.btn-upload-excel:hover {
+.btn-add-employee:hover {
     background: #059669;
     transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   Modal Stilleri
+   ========================================================================== */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.employee-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.employee-select-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.employee-select-item:hover {
+    background: var(--border-color);
+}
+
+.employee-select-item.selected {
+    background: var(--admin-accent);
+    border-color: var(--admin-accent);
+    color: #fff;
+}
+
+.employee-select-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.employee-select-item .employee-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.employee-select-item .employee-time {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.employee-select-item.selected .employee-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-secondary {
+    background: var(--border-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--text-muted);
+    color: #fff;
+}
+
 /* Mobil uyumlu stiller */
 @media (max-width: 768px) {
-    .upload-controls {
+    .filter-controls {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .btn-upload,
-    .btn-upload-excel {
-        padding: 1rem;
-        font-size: 1rem;
-        min-height: 48px;
+    .filter-group {
+        min-width: 100%;
     }
 
-    .day-select {
-        padding: 1rem;
-        font-size: 1rem;
-        min-height: 48px;
+    .btn-filter {
+        width: 100%;
     }
 
-    .shift-upload-section,
-    .excel-upload-section {
-        padding: 1rem;
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
     }
-}
 
-.upload-status {
-    margin-top: 0.75rem;
-    font-size: 0.9rem;
-    color: var(--text-muted);
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-footer button {
+        width: 100%;
+    }
 }
 
 /* ==========================================================================
