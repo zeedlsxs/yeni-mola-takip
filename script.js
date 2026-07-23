@@ -785,7 +785,7 @@ async function addSelectedEmployees() {
                 method: "POST",
                 body: JSON.stringify({
                     employee_id: employeeId,
-                    date: today
+                    work_date: today
                 })
             });
             addedCount++;

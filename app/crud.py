@@ -976,7 +976,7 @@ def create_daily_active_employee(
     """Günlük aktif personel ekler."""
     daily = DailyActiveEmployee(
         employee_id=daily_in.employee_id,
-        date=daily_in.date,
+        date=daily_in.work_date,
         added_by=added_by,
     )
     db.add(daily)
