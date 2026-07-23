@@ -1042,10 +1042,14 @@ async function deleteUser(userId, username) {
 }
 
 function initAdminPage() {
+    console.log("initAdminPage çağrıldı");
     if (!requireAdmin()) return;
 
+    console.log("Admin kontrolü geçti");
     initTheme();
+    console.log("loadDepartments çağrılacak");
     loadDepartments();
+    console.log("loadActiveEmployeesForBreakTracking çağrılacak");
     loadActiveEmployeesForBreakTracking();
 
     const user = getUser();
