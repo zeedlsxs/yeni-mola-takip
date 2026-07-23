@@ -651,7 +651,7 @@ if _serve_frontend and (_frontend_dir / "index.html").is_file():
 # Seed Endpoint (Sadece geliştirme için - production'da kaldırılmalı)
 # ---------------------------------------------------------------------------
 
-@app.post("/seed-departments")
+@app.get("/seed-departments")
 def seed_departments_endpoint(db: DbSession):
     """Departmanları ve personelleri seed eder."""
     from app.models import Department, Employee
