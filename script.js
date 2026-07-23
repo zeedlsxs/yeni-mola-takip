@@ -658,8 +658,16 @@ let selectedEmployees = [];
 // Departmanları yükle
 async function loadDepartments() {
     try {
+        console.log("Departmanlar yükleniyor...");
         const response = await apiRequest("/departments");
+        console.log("Departmanlar:", response);
+        
         const departmentSelect = document.getElementById("department-select");
+        
+        if (!departmentSelect) {
+            console.error("department-select elementi bulunamadı");
+            return;
+        }
         
         departmentSelect.innerHTML = '<option value="">Departman Seçin</option>';
         
