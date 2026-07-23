@@ -642,8 +642,21 @@ def get_active_employees_for_break_tracking_endpoint(date: date, db: DbSession):
 
 _frontend_dir = Path(__file__).resolve().parent.parent
 
-# Tüm statik dosyaları root path'ten serve et
-app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
+# Render için özel statik dosya serving
+from fastapi.responses import FileResponse
+from fastapi import Request
+
+@app.get("/{full_path:path}")
+async def serve_static(full_path: str):
+    file_path = _frontend_dir / full_path
+    if file_path.is_file():
+        return FileResponse(file_path)
+    # Dosya yoksa index.html döndür (SPA routing için)
+    return FileResponse(_frontend_dir / "index.html")
+
+@app.get("/")
+async def serve_index():
+    return FileResponse(_frontend_dir / "index.html")
 
 
 # ---------------------------------------------------------------------------
