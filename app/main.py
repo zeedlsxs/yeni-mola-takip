@@ -646,3 +646,71 @@ _frontend_dir = Path(__file__).resolve().parent.parent
 if _serve_frontend and (_frontend_dir / "index.html").is_file():
     app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
 
+
+# ---------------------------------------------------------------------------
+# Seed Endpoint (Sadece geliştirme için - production'da kaldırılmalı)
+# ---------------------------------------------------------------------------
+
+@app.post("/seed-departments")
+def seed_departments_endpoint(db: DbSession):
+    """Departmanları ve personelleri seed eder."""
+    from app.models import Department, Employee
+    from app.auth import hash_password
+    
+    # Mevcut departmanları kontrol et
+    existing_departments = db.query(Department).all()
+    if existing_departments:
+        return {"message": "Departmanlar zaten var", "count": len(existing_departments)}
+    
+    departments_data = [
+        {
+            "name": "Ana Mutfak / Ekip Programı",
+            "description": "Ana mutfak ve ekip programı personeli",
+            "employees": [
+                "SEYFETTİN K.", "YAVUZ AKKAYA", "BURCU K.", "DAMLA KARATAŞ", "BEREN ALTUN",
+                "BEYZA AYAZ", "KAĞAN KONAKCI", "ŞAHİNDE DELER", "ONURCAN DEMİREZEN",
+                "YASİN MERT", "FURKAN BAYRAM", "ÖMER FARUK FARAŞ", "AYSEL Ç.",
+                "HAYRETTİN G. (GENÇ)", "ESMA KEREM (GENÇ)", "EREN D. (GENÇ)", "RABİA KARA (GENÇ) PART"
+            ]
+        },
+        {
+            "name": "GEL",
+            "description": "GEL grubu personeli",
+            "employees": ["GÜLAY S.", "HANİFE T."]
+        },
+        {
+            "name": "BARİSTA",
+            "description": "Barista grubu personeli",
+            "employees": ["ESMA OĞUZKAYA", "NURSENA AY (GENÇ İŞÇİ)", "MERCAN E. (PART)", "SEMANUR D."]
+        },
+        {
+            "name": "MASAYA SERVİS TENT-LOBİ",
+            "description": "Masa servisi ve tent-lobi personeli",
+            "employees": ["NECLA", "ESMA A."]
+        }
+    ]
+    
+    for dept_data in departments_data:
+        department = Department(
+            name=dept_data["name"],
+            description=dept_data["description"],
+            is_active=True
+        )
+        db.add(department)
+        db.flush()
+        
+        for employee_name in dept_data["employees"]:
+            employee_code = employee_name.lower().replace(" ", "_").replace("(", "").replace(")", "").replace(".", "")
+            employee = Employee(
+                full_name=employee_name,
+                employee_code=employee_code,
+                department_id=department.id,
+                is_active=True,
+                is_on_break=False,
+                password_hash=hash_password("123456")
+            )
+            db.add(employee)
+    
+    db.commit()
+    return {"message": "Seed tamamlandı", "departments": len(departments_data)}
+
