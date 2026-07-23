@@ -74,6 +74,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Statik dosyaları root'tan serve et (API tanımlarından önce)
+_frontend_dir = Path(__file__).resolve().parent.parent
+if (_frontend_dir / "index.html").is_file():
+    app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
+
 # Frontend'in farklı porttan API'ye erişebilmesi için CORS
 app.add_middleware(
     CORSMiddleware,
@@ -634,29 +639,6 @@ def get_active_employees_for_break_tracking_endpoint(date: date, db: DbSession):
         }
         for emp in employees
     ]
-
-
-# ---------------------------------------------------------------------------
-# Frontend (PWA) — Statik Dosya Sunumu
-# ---------------------------------------------------------------------------
-
-_frontend_dir = Path(__file__).resolve().parent.parent
-
-# Render için özel statik dosya serving
-from fastapi.responses import FileResponse
-from fastapi import Request
-
-@app.get("/{full_path:path}")
-async def serve_static(full_path: str):
-    file_path = _frontend_dir / full_path
-    if file_path.is_file():
-        return FileResponse(file_path)
-    # Dosya yoksa index.html döndür (SPA routing için)
-    return FileResponse(_frontend_dir / "index.html")
-
-@app.get("/")
-async def serve_index():
-    return FileResponse(_frontend_dir / "index.html")
 
 
 # ---------------------------------------------------------------------------
