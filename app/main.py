@@ -640,10 +640,10 @@ def get_active_employees_for_break_tracking_endpoint(date: date, db: DbSession):
 # Frontend (PWA) — Statik Dosya Sunumu (yalnızca yerel / tek sunucu modunda)
 # ---------------------------------------------------------------------------
 
-_serve_frontend = os.getenv("SERVE_FRONTEND", "true").lower() in ("1", "true", "yes")
 _frontend_dir = Path(__file__).resolve().parent.parent
 
-if _serve_frontend and (_frontend_dir / "index.html").is_file():
+# Her zaman statik dosyaları sun
+if (_frontend_dir / "index.html").is_file():
     app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
 
 
