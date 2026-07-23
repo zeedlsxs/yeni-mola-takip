@@ -719,19 +719,46 @@ if not (_frontend_dir / "index.html").is_file():
 print(f"Frontend directory: {_frontend_dir}")
 print(f"Index.html exists: {(_frontend_dir / 'index.html').is_file()}")
 
-@app.get("/{full_path:path}")
-async def serve_static(full_path: str):
-    """Tüm statik dosyaları serve et."""
-    file_path = _frontend_dir / full_path
-    print(f"Requesting: {full_path}, File path: {file_path}, Exists: {file_path.is_file()}")
-    if file_path.is_file():
-        return FileResponse(file_path)
-    # Dosya yoksa index.html döndür (SPA routing için)
-    return FileResponse(_frontend_dir / "index.html")
-
 @app.get("/")
 async def serve_index():
     """Ana sayfa."""
     print(f"Root request, serving index.html from: {_frontend_dir / 'index.html'}")
     return FileResponse(_frontend_dir / "index.html")
+
+# Spesifik statik dosya endpoint'leri
+@app.get("/index.html")
+async def serve_index_html():
+    return FileResponse(_frontend_dir / "index.html")
+
+@app.get("/dashboard.html")
+async def serve_dashboard_html():
+    return FileResponse(_frontend_dir / "dashboard.html")
+
+@app.get("/employee.html")
+async def serve_employee_html():
+    return FileResponse(_frontend_dir / "employee.html")
+
+@app.get("/style.css")
+async def serve_style_css():
+    return FileResponse(_frontend_dir / "style.css")
+
+@app.get("/script.js")
+async def serve_script_js():
+    return FileResponse(_frontend_dir / "script.js")
+
+@app.get("/config.js")
+async def serve_config_js():
+    return FileResponse(_frontend_dir / "config.js")
+
+@app.get("/manifest.json")
+async def serve_manifest_json():
+    return FileResponse(_frontend_dir / "manifest.json")
+
+@app.get("/sw.js")
+async def serve_sw_js():
+    return FileResponse(_frontend_dir / "sw.js")
+
+@app.get("/icons/{icon_name}")
+async def serve_icons(icon_name: str):
+    return FileResponse(_frontend_dir / "icons" / icon_name)
 
