@@ -710,12 +710,19 @@ def seed_departments_endpoint(db: DbSession):
 
 from fastapi.responses import FileResponse
 
-_frontend_dir = Path(__file__).resolve().parent.parent
+# Render için özel dosya yolu kontrolü
+_frontend_dir = Path("/opt/render/project/src")
+if not (_frontend_dir / "index.html").is_file():
+    _frontend_dir = Path(__file__).resolve().parent.parent
+
+print(f"Frontend directory: {_frontend_dir}")
+print(f"Index.html exists: {(_frontend_dir / 'index.html').is_file()}")
 
 @app.get("/{full_path:path}")
 async def serve_static(full_path: str):
     """Tüm statik dosyaları serve et."""
     file_path = _frontend_dir / full_path
+    print(f"Requesting: {full_path}, File path: {file_path}, Exists: {file_path.is_file()}")
     if file_path.is_file():
         return FileResponse(file_path)
     # Dosya yoksa index.html döndür (SPA routing için)
@@ -724,5 +731,6 @@ async def serve_static(full_path: str):
 @app.get("/")
 async def serve_index():
     """Ana sayfa."""
+    print(f"Root request, serving index.html from: {_frontend_dir / 'index.html'}")
     return FileResponse(_frontend_dir / "index.html")
 
