@@ -1357,8 +1357,26 @@ function initEmployeePage() {
 // Başlatma
 // ---------------------------------------------------------------------------
 
+console.log("script.js yüklendi");
+
 document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("login-form")) initLoginPage();
-    else if (document.getElementById("panel-tabs")) initAdminPage();
-    else if (document.getElementById("neon-progress-wrap")) initEmployeePage();
+    console.log("DOMContentLoaded tetiklendi");
+    console.log("login-form:", document.getElementById("login-form"));
+    console.log("panel-tabs:", document.getElementById("panel-tabs"));
+    console.log("neon-progress-wrap:", document.getElementById("neon-progress-wrap"));
+    
+    if (document.getElementById("login-form")) {
+        console.log("initLoginPage çağrılacak");
+        initLoginPage();
+    }
+    else if (document.getElementById("panel-tabs")) {
+        console.log("initAdminPage çağrılacak");
+        initAdminPage();
+    }
+    else if (document.getElementById("neon-progress-wrap")) {
+        console.log("initEmployeePage çağrılacak");
+        initEmployeePage();
+    } else {
+        console.log("Hiçbir sayfa türü eşleşmedi");
+    }
 });
