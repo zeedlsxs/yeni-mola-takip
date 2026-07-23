@@ -437,7 +437,7 @@ class DailyActiveEmployeeCreate(BaseModel):
     """Günlük aktif personel ekleme isteği."""
 
     employee_id: int = Field(..., description="Personel ID")
-    date: date = Field(..., description="Tarih")
+    date: datetime.date = Field(..., description="Tarih")
 
 
 class DailyActiveEmployeeResponse(BaseModel):
