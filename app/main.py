@@ -615,10 +615,9 @@ def get_daily_active_employees_endpoint(date: date, db: DbSession):
 def create_daily_active_employee_endpoint(
     daily_in: DailyActiveEmployeeCreate,
     db: DbSession,
-    current_user: dict = Depends(get_current_user),
 ):
     """Günlük aktif personel ekler."""
-    return crud.create_daily_active_employee(db, daily_in, current_user["username"])
+    return crud.create_daily_active_employee(db, daily_in, "admin")
 
 
 @app.delete("/daily-active-employees/{employee_id}", tags=["Günlük Aktif Personel"])
