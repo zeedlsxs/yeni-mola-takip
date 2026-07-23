@@ -557,7 +557,7 @@ def delete_department_endpoint(department_id: int, db: DbSession):
 
 
 @app.get("/shift-schedules", tags=["Vardiya Programı"], response_model=list[ShiftScheduleResponse])
-def get_shift_schedules_endpoint(employee_id: int | None = None, db: DbSession = Depends(get_db)):
+def get_shift_schedules_endpoint(employee_id: int | None = None, db: DbSession):
     """Vardiya programlarını getirir."""
     return crud.get_shift_schedules(db, employee_id)
 
